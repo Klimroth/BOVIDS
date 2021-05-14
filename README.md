@@ -35,7 +35,7 @@ Some parts of BOVIDS (i.e. if you want to use the tools for editing video files)
 >
 >conda install -c conda-forge moviepy opencv ffmpeg
 
-Finally, the third party software (MIT license) [https://github.com/tzutalin/labelImg](labelImg by tzutalin) might be installed in a third environment. Detailed instructions can be found at the corresponding github repository.
+Finally, the third party software (MIT license) [labelImg by tzutalin](https://github.com/tzutalin/labelImg) might be installed in a third environment. Detailed instructions can be found at the corresponding github repository.
 
 ## Acknowledgement
 The yolov4 implementation of BOVIDS is based on the implementation by [taipingeric](https://github.com/taipingeric/yolo-v4-tf.keras). 
