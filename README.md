@@ -106,15 +106,30 @@ In order to generate an initial training set, some nights need to be manually la
 A so-called **training-csv-file** is a comma-separated text-csv with headers "date", "species", "enclosure number", "video numbers", "individual numbers", each line contains one night of a specific enclosure to which a boris-csv-file as an annotation exists and whose data should be part of the training set. Recall that date has the form YYYY-MM-DD, the enclosure number is one integer and videonumbers and individualnumbers are either an integer or a concatenation like 1;3;4 (meaning that video with number 1, with number 3 and with number 4 will be cut next to each other and used as one stream to the enclosure). Those .csv-files can be conveniently created with OpenOffice/LibreOffice. An example can be found in *action_classification/training/example_training_file.csv*. TODO: example :left_speech_bubble:
 
 #### Create a balanced training set
-Based on the previously created csv-trainings-file, *action_classification/training/generate_training_images_from_video.py* contains the functionality to produce balanced training images for both action classification streams (single frame and four-frame encoded). Recall that, before running the script,  well-trained object detectors are necessary. The output are folders containing images of classes 0 (standing), 1 (lying - head up) and 2 (lying - head down). Of course, BOVIDS can be used for estimating any three poses independently of the name. The code is furthermore straight forward to generalise to a different number of classes, but some programming is necessary.
+Based on the previously created csv-trainings-file, *action_classification/training/generate_training_images.py* contains the functionality to produce balanced training images for both action classification streams (single frame and four-frame encoded). Recall that, before running the script,  well-trained object detectors are necessary. The output are folders containing images of classes 0 (standing), 1 (lying - head up) and 2 (lying - head down). Of course, BOVIDS can be used for estimating any three poses independently of the name. The code is furthermore straight forward to generalise to a different number of classes, but some programming is necessary.
 
-#### 
+#### Data preparation and validation split
+BOVIDS provides some functions for preparing the necessary datasets for the total and the binary classification task in *action_classification/training/prepare_data_ac.py*. More precisely, images from different training sets (thus, folders containing 0/, 1/, 2/) can be merged, single classes can be randomly upsampled if the data is not sufficiently balanced and different classes can be merged. Furthermore, it provides the functionality to randomly select a subset of images as a validation set. At this point, a user should have 8 folders in total:
+**multiple_frame_total:** train, validation
+**multiple_frame_binary:** train, validation
+**single_frame_total:** train, validation
+**single_frame_binary:** train, validation
 
-
+#### Training of the action classifiers
+Use *action_classification/training/training_efficientnet.py* in order to train the four necessary action classifiers. It is possible to either finetune existing networks (input a compatible .h5 file as model weights) or to train on imagenet weights (choose 'imagenet' as model weights). Of course, the batch size and the number of epochs can be adjusted. BOVIDS does not support multiple gpu models, therefore, if multiple gpus are present, select which gpu shall be used. It is possible to train different networks on different gpus in parallel.
 
 
 ### Offline hard example mining
+Once first versions of the action classifiers are trained, those can be used to generate a uniformly distributed training set for the final classifiers. Therefore, multiple nights should be predicted (see below) and the outcome can be used to evaluate the action classifiers. Furthermore, it can be used to generate automatically an almost balanced training set over the whole observation time without too much manual work load.
 
+#### Evaluate the prediction
+*action_classification/ohem/hard_example_mining_efficientnet.py* selects based on the prediction a uniformly at random chosen subset of images (single frame and multiple frame) with their corresponding labels (of the current action classifier). It is possible to choose whether uniformly at random sampled images should be drawn or if explicitely **hard examples** should be minded. Hard examples are images refering to time-intervals in which the predictions of the single frame and multiple frame action classifiers are not coherent. 
+
+Now, *action_classification/ohem/efficientnet_evaluate_examples.py* can be used to display the single-frame and multiple-frame images next to each other and show the prediction given through the prediction system as a color code. A user can now give his own label. 
+
+IMAGE EXAMPLE!!!
+
+In the end, the script can be used to extract statistical values like the accuracy and, more importantly, to move the images to their real classes. Therefore, we are left with a (not necessarily strictly balanced) set of images stemming from the whole observation time - an almost perfect training set. This training set is now used to fine-tune the previous action classifiers (like in the training step described above).
 
 ## Object detection
 
