@@ -129,6 +129,7 @@ Now, *action_classification/ohem/efficientnet_evaluate_examples.py* can be used 
 
 :left_speech_bubble: IMAGE EXAMPLE!!!
 
+#### Retrain the action classifiers
 In the end, the script can be used to extract statistical values like the accuracy and, more importantly, to move the images to their real classes. Therefore, we are left with a (not necessarily strictly balanced) set of images stemming from the whole observation time - an almost perfect training set. This training set is now used to fine-tune the previous action classifiers (like in the training step described above).
 
 ## Object detection
