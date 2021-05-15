@@ -127,7 +127,7 @@ Once first versions of the action classifiers are trained, those can be used to 
 
 Now, *action_classification/ohem/efficientnet_evaluate_examples.py* can be used to display the single-frame and multiple-frame images next to each other and show the prediction given through the prediction system as a color code. A user can now give his own label. 
 
-IMAGE EXAMPLE!!!
+:left_speech_bubble: IMAGE EXAMPLE!!!
 
 In the end, the script can be used to extract statistical values like the accuracy and, more importantly, to move the images to their real classes. Therefore, we are left with a (not necessarily strictly balanced) set of images stemming from the whole observation time - an almost perfect training set. This training set is now used to fine-tune the previous action classifiers (like in the training step described above).
 
