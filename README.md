@@ -34,7 +34,7 @@ We suggest installing the necessary packages using anaconda as it will control t
 If you are on linux, make sure to have the following packages installed.
 > libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
 
-Some parts of BOVIDS (i.e. if you want to use the tools for editing video files) require moviepy. As it is fairly likely to create a version clash between opencv, ffmpeg and moviepy, we suggest to create a different environment in that case.
+Some parts of BOVIDS (i.e. if you want to use the tools for editing video files) require moviepy. As it is fairly likely to create a version clash between opencv, ffmpeg and moviepy, we suggest to create a different environment in that case. If not stated explicitely, the scripts provided by BOVIDS shall be run inside this bovids-environment.
 
 >conda create -n "video" python==3.7
 >
@@ -135,11 +135,51 @@ In the end, the script can be used to extract statistical values like the accura
 ## Object detection
 
 ### Preparation
+In a first step, *object_detection/preparation/create_annotation_images.py* provides the funcitonality to cut out single frames equally distributed over various nights. Those single images are then annotated manually with [labelImg by tzutalin](https://github.com/tzutalin/labelImg), take care that the labels coincide with the individualcodes and take care that the labels are stored in the PASCAL_VOC style.
 
-### Training of an initial network
+It is suggested to save the images in the structure described above (object detection storage).
+
+### Training
+In the end, the training script of the object detector *object_detection/training/training_yolov4.py* BOVIDS requires all images that should be part of the training and validation set in one folder and a .txt-file containing the annotations. BOVIDS provides *object_detection/training/prepare_data_od.py* which contains functions to create such a folder out of the previously described structure. It can be used to merge the data of various enclosures (for instance, if an object detector for many enclosures that only contain one individual each needs to be trained). Further, it is possible to rename the labels that were previously given. Once all images and, respectively, labels, are stored inside the required structure, *object_detection/training/training_yolov4.py* is be used to create the required label-text file. The same script is then used to train an object detector. Take care of the model weights, if no valid weights are presented, it will transfer learn on imagenet weights. Transferlearning from previously trained models is only possible if the number of classes (thus, the number of individuals that need to be distinguished) coincides.
+
 
 ### Offline hard example mining
 
+3.3.	Prognose durch YOLO
+1.	Funktioniert nur an KI-Rechnern
+2.	Erstellen der Bilder und dazugehörigen Label durch YOLO für die Bewertung der Prognose
+3.	Bei bekannten Arten, bei neuen Arten zuerst zu 3.2 Kästen mit labelImg ziehen
+4.	Programm bestehet aus zwei Schritten, die normalerweise direkt nacheinander durchgeführt werden
+i.	Schritt 1: Erstellung der Bilder
+ii.	Schritt 2: Erstellen der Label durch YOLO
+5.	Benötigt:
+i.	csv-Datei mit den Nächten, aus welchen die Bilder erzeugt werden sollen (für Schritt 1) in folgender Form:
+Datum	Art	Zoo	Gehege	Videos	Individuen
+18.02.2020	Pferdeantilope	Dortmund	1	1	1
+31.12.2018	Okapi	Frankfurt	2	3;4	2
+10.01.2020	Elen	Münster	3	4	2;6
+
+ii.	Ordner der Bilder aus Schritt 1 (für Schritt 2)
+iii.	Objekt-Detektion-Netzwerk
+iv.	global_configuration.py: Um zugrundeliegendes OD-Netzwerk zu verwenden (für Schritt 2)
+6.	Programm zum Erzeugen der Kästen (generate_annotation_files_from_video.py) verwenden
+i.	Mit Spyder öffnen (Umgebung ki)
+ii.	Parameter und Pfade im Programmcode nach Anleitung anpassen
+iii.	Programm ausführen (F5), startet automatisch
+	Programm liegt in Programme/KI-Programme/KI/prediction_tool_yolo/training/preparation
+	Anleitung liegt Programme/KI-Programme/KI/Kurzanleitung
+
+3.4.	Bewerten der Kästen aus Prognose
+1.	Evaluationsprogramm (evaluate_bounding_boxes.py) verwenden
+i.	Mit Spyder (oder IDLE) öffnen (Umgebung video)
+ii.	Parameter und Pfade im Programmcode nach Anleitung anpassen
+iii.	Programm ausführen (F5)
+I.	Zur Bildbewertung: evaluate_folder() in Konsole (Shell) eintippen
+II.	Zum Anzeigen der Statistik: get_statistics() in Konsole (Shell) eintippen
+III.	Zum Verschieben der guten, schlechten und vertauschten Bilder: move_data_by_evaluation_value() in Konsole (Shell) eintippen
+2.	Wenn < 4% der Label schlecht sind und > 50% der Label gut sind, kann das Grundnetzwerk der Tierart verwendet werden
+i.	Ansonsten: Nachlabeln (siehe 3.4) der schlechten und vertauschten Bilder und Nachtrainieren (siehe 3.5 und 3.6) des Netzwerkes (für dieses Gehege) mit den guten Bildern sowie den nachgelabelten schlechten und vertauschten.
+	Programm und Anleitung liegen in Programme/KI-Programme/Vorbereitung_ObjectDetection
 
 ## Data prediction and evaluation
 
