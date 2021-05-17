@@ -162,14 +162,26 @@ Similarily as in the action classification case, those labels can now be evaluat
 After manual re-annotation, *object_detection/training/prepare_data_od.py* is used to create a new dataset out of the old labels, the good labels and the freshly annotated labels and images. Now, the network is trained again as described above. In principle, the whole procedure can be iterated until the quality is sufficiently high.
 
 ## Data prediction and evaluation
+The prediction pipeline is controlled by three scripts, namely *global/global_configuration.py*, *prediction/predict_csv.py*, *prediction/configuration.py*. The content of the global configuration is explained below, basically, it gives the possibility to store global information like the path to an object detector used for a specific enclosurecode and similar information. The local file *prediction/configuration.py* is used to configure the storage of the videos and the storage of the files that are created by BOVIDS per night.
 
 ### Prediction
+
 
 ### Evaluation
 
 ### Presentation
 
 
+
+## (global) configuration
+
+### Storage of networks
+
+### Adding black regions
+
+### Ordering video frames
+
+### 
 
 ## Acknowledgement
 The yolov4 implementation of BOVIDS is based on the implementation by [taipingeric](https://github.com/taipingeric/yolo-v4-tf.keras). 
