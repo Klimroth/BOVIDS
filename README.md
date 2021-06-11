@@ -228,7 +228,7 @@ If the configuration is complete, save the document and open *prediction/predict
 
 
 ## Acknowledgement
-The yolov4 implementation of BOVIDS is based on the implementation by [taipingeric](https://github.com/taipingeric/yolo-v4-tf.keras). Parts of the prediction pipeline themselves can already be found in one of our prior repositories by [Hahn-Klimroth and Kapetanopoulos](https://github.com/Klimroth/Video-Action-Classifier-for-African-Ungulates-in-Zoos).
+The yolov4 implementation of BOVIDS is based on the implementation by [taipingeric](https://github.com/taipingeric/yolo-v4-tf.keras). Parts of the prediction pipeline themselves can already be found in one of [our prior repositories](https://github.com/Klimroth/Video-Action-Classifier-for-African-Ungulates-in-Zoos).
 
 
 
