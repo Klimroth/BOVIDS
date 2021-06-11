@@ -190,45 +190,34 @@ Finally, *global/global_configuration.py* contains four dictionaries (BEHAVIOR_N
 *global/global_configuration.py* allows to modify the global starting time and ending time of a video. If, for instance, this is set to 17 and 07 (5 p.m. and 7 a.m.), then shorter videos (like 6 p.m. to 5 a.m.) are evaluated in such a way that the first hour and the last two hours are set to "out of view". 
 
 ### Prediction
-INPUT_CSV_FILE = '/home/omen4/PromotionJenny/KI_Projekt/CSV_Prediction/Elen_Dortmund_3-4.csv' 
-
-# on local hard drive
-TMP_STORAGE_IMAGES = '/home/omen4/KI-Projekt/TemporaryFiles/IMG/'
-TMP_STORAGE_CUTOUT = '/home/omen4/KI-Projekt/TemporaryFiles/CUTOUT/' 
-#TMP_STORAGE_CUTOUT = '/home/omen4/PromotionJenny/KI_CutOutImages/'
-
-# on server
-FINAL_STORAGE_CUTOUT = '/home/omen4/PromotionJenny/KI_CutOutImages/'
-FINAL_STORAGE_PREDICTION_FILES = '/home/omen4/PromotionJenny/KI_Auswertung/'
-
-LOGGING_FILES = '/home/omen4/PromotionJenny/KI_Logfiles/'
-
-
-
-"""
-Conducted Steps (False = step will be conducted)
-"""
-SKIP_IMAGE_CREATION = False
-                             
-SKIP_INDIVIDUAL_DETECTION = False
-
-SKIP_BEHAVIOR_TOTAL_SF = False
-SKIP_BEHAVIOR_TOTAL_MF = False
-
-SKIP_BEHAVIOR_BINARY_SF = False
-SKIP_BEHAVIOR_BINARY_MF = False  
-                             
-SKIP_MOVING_FILES = False
-SKIP_REMOVING_TEMPORARY_FILES = False
-                             
-SKIP_PP_TOTAL = False
-SKIP_PP_BINARY = False
-
-SKIP_OD_DENSITY = False
-
+To finally predict new nights, we require *prediction/predict_csv.py*, *prediction/configuration.py* and a prediction-csv file containing the information which nights should be predicted. Let us start with the latter. It is similar to the csv files discussed before but contains additional columns for the starting time and ending time, the chosen post-processing rules (needs to be a valid entry of above's dictionaries) and the borders of truncated regions (as discussed earlier). If no truncation should be applied, top and left need to be set to zero and right as well as bottom to a large number (e.g. 2000). An example can be found here.
 ![Image_prediction](images/prediction_csv.png)
 
-then predict_csv...
+In *prediction/predict_csv.py*, variable INPUT_CSV_FILE contains the full path to the created prediction-csv file. Furthermore, five variables containing different paths need to be adjusted. Recall at this point that BOVIDS first cuts out single frames from the video files, then applies object detection and finally uses the action classifier. TMP_STORAGE_IMAGES is thought to be a temporary data storage in which the images can be stored while TMP_STORAGE_CUTOUT contains the images after the object detection phase. ** Make sure, that the temporary storage is large enough for the images of all your video files conducted in the prediction step! ** As the object detection part is the most time-consuming part, BOVIDS provides the functionality to store the temporary cut-out images (FINAL_STORAGE_CUTOUT) such that they can, in principle, be used again. Further, those images can be used to check whether object detection (and later, action classification) work well. Finally, in 
+FINAL_STORAGE_PREDICTION_FILES, stores .xslx files, images and .csv files that contain the actual prediction per night, those files are presented later on. Last but not least, BOVIDS creates a logfile containing all written outputs of the console and saves it in the folder LOGGING_FILES. Here, and everywhere, make sure that your folder-path variables end with a "/", otherwise, BOVIDS will behave unexpected.
+
+Furthermore, a user can configure which steps of the prediction process should be skipped. If, for instance, the cut-out images already exist and a new action classifier should be applied, then TMP_STORAGE_CUTOUT need to be set to the actual location of the present images and image creation and object detection can be skipped. Analogously, it might be tempting to try different post-processing rules, in that case only the post-processing step can be applied. Attention: the boolean variable False here means that a step is conducted, so that the standard configuration is: everything False.
+
+* SKIP_IMAGE_CREATION: if True, no frames will be cut out of videos.                          
+* SKIP_INDIVIDUAL_DETECTION: if True, object detection phase will be skipped.
+* SKIP_BEHAVIOR_TOTAL_SF: if True, this part of action classification will be skipped.
+* SKIP_BEHAVIOR_TOTAL_MF: if True, this part of action classification will be skipped.
+* SKIP_BEHAVIOR_BINARY_SF: if True, this part of action classification will be skipped.
+* SKIP_BEHAVIOR_BINARY_MF: if True, this part of action classification will be skipped.
+* SKIP_MOVING_FILES: if True, the temporary files will not be moved to the final storage.
+* SKIP_REMOVING_TEMPORARY_FILES: if True, the TMP_* folders will NOT be deleted. If False, they will be deleted.
+* SKIP_PP_TOTAL: if True, this part of post-processing will be skipped.
+* SKIP_PP_BINARY: if True, this part of post-processing will be skipped.
+* SKIP_OD_DENSITY: if True, BOVIDS does not analyse what percentage of individuals could be successfully identified during object detection.
+
+Please realise that the following requirements need to be satisfied:
+* If action classification is conducted, TMP_STORAGE_CUTOUT needs to contain the corresponding images.
+* if post-processing is applied, FINAL_STORAGE_PREDICTION_FILES needs the output generated by the action classification step (folder raw_csv), furthermore, FINAL_STORAGE_CUTOUT needs to contain the .txt documents containing the position of each bounding box created during object detection.
+
+If the configuration is complete, save the document and open *prediction/predict_csv.py*. First, adjust the following variables.
+* AI_LIBRARY_LOCAL: path to the folder prediction of this repository (e.g. '/home/user/bovids/prediction/')
+* AI_LIBRARY_GLOBAL: path to the folder global of this repository (e.g. '/home/mnt/fancy_nas/bovids/global/')
+* YOLO_LIBRARY: path to the yolov4 library of this repository (e.g. '/home/mnt/fancy_nas/bovids/global/yolo-v4-tf.keras-master/') 
 
 ### Evaluation
 
