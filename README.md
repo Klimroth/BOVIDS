@@ -219,6 +219,9 @@ If the configuration is complete, save the document and open *prediction/predict
 * AI_LIBRARY_GLOBAL: path to the folder global of this repository (e.g. '/home/mnt/fancy_nas/bovids/global/')
 * YOLO_LIBRARY: path to the yolov4 library of this repository (e.g. '/home/mnt/fancy_nas/bovids/global/yolo-v4-tf.keras-master/') 
 
+If multiple GPUs are present, decide which GPU is used for prediction (multiple processes on different GPUs can be conducted in parallel) by setting GPU_TO_USE accordingly. If only one GPU is present, choose '0'. Save the document and run it (e.g. in the spyder console or via the terminal).
+
+
 ### Evaluation
 
 ### Presentation
