@@ -164,6 +164,10 @@ After manual re-annotation, *object_detection/training/prepare_data_od.py* is us
 ## Data prediction and evaluation
 The prediction pipeline is controlled by three scripts, namely *global/global_configuration.py*, *prediction/predict_csv.py*, *prediction/configuration.py*. The content of the global configuration is explained below, basically, it gives the possibility to store global information like the path to an object detector used for a specific enclosurecode and similar information. The local file *prediction/configuration.py* is used to configure the storage of the videos and the storage of the files that are created by BOVIDS per night.
 
+### Truncation
+As the classification of images suffering from severe truncation effects is fairly difficult, BOVIDS provides a "truncation" parameter that allows to withdraw bounding boxes very close to the image border. To this end, for each night that should be predicted by BOVIDS, the user can define four boundaries (pixel from top and from left) such that bounding boxes being completely inside those regions are treated differently: one can choose in the global configuration file (see below) which behaviour class will be given to those images (standard: out of view) if the truncation phase is short, medium or long. Depending on the number of video streams and their resolution, the coordinates of the bounding boxes need to be adjusted, see the following figure:
+
+
 ### Prediction
 
 
