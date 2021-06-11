@@ -186,11 +186,49 @@ One very important feature of BOVIDS is the post-processing (see a detailed disc
 It is supposed that there are two different folders for the object detection networks and the action classification networks. Suppose, the paths are P(OD) and P(AC) respectively. The user might want to create a subfolder "binary" inside of P(AC) in order to distinguish between the total and the binary classification task. P(OD) and P(AC) need to be put into *prediction/configuration.py*, lines 84 and 83. Furthermore, line 82 contains DATA_STORAGE (the path to the video structure as discussed above).
 Finally, *global/global_configuration.py* contains four dictionaries (BEHAVIOR_NETWORK_SINGLE_FRAME_GLOBAL_BINARY, BEHAVIOR_NETWORK_JOINT_GLOBAL_BINARY, BEHAVIOR_NETWORK_SINGLE_FRAME_GLOBAL, BEHAVIOR_NETWORK_JOINT_GLOBAL) containing the relative path to the action classification networks (starting from P(AC)). The keys of the dictionaries need to be an individual_code. The function *get_behaviornetwork()* can be modified if few standard networks shall be used for a broad class of different individuals. Similarily, BASE_OD_NETWORK_GLOBAL and OD_NETWORK_LABELS_GLOBAL contain the relative path starting from P(OD) to the object detection network and, respectively, the corresponding label file (.txt). Those values are indexed by either a species, a species_zoo-code, an enclosure_code or an enclosure_individual_code. *get_object_detection_network()* might be modified if required. In the context of choosing an object detection network, MIN_DETECTION_SCORE and IOU_THRESHOLD are indexed by an enclosure_code and contain the iou_threshold / minimum detection score during object detection. If an enclosure is missing in this dictionary, the standard values of iou = 0.5 and score = 0.95 are applied. We suggest to decrease iou and score if multiple individuals are present in one enclosure.
 
-
+### Additional global parameters
+*global/global_configuration.py* allows to modify the global starting time and ending time of a video. If, for instance, this is set to 17 and 07 (5 p.m. and 7 a.m.), then shorter videos (like 6 p.m. to 5 a.m.) are evaluated in such a way that the first hour and the last two hours are set to "out of view". 
 
 ### Prediction
+INPUT_CSV_FILE = '/home/omen4/PromotionJenny/KI_Projekt/CSV_Prediction/Elen_Dortmund_3-4.csv' 
+
+# on local hard drive
+TMP_STORAGE_IMAGES = '/home/omen4/KI-Projekt/TemporaryFiles/IMG/'
+TMP_STORAGE_CUTOUT = '/home/omen4/KI-Projekt/TemporaryFiles/CUTOUT/' 
+#TMP_STORAGE_CUTOUT = '/home/omen4/PromotionJenny/KI_CutOutImages/'
+
+# on server
+FINAL_STORAGE_CUTOUT = '/home/omen4/PromotionJenny/KI_CutOutImages/'
+FINAL_STORAGE_PREDICTION_FILES = '/home/omen4/PromotionJenny/KI_Auswertung/'
+
+LOGGING_FILES = '/home/omen4/PromotionJenny/KI_Logfiles/'
+
+
+
+"""
+Conducted Steps (False = step will be conducted)
+"""
+SKIP_IMAGE_CREATION = False
+                             
+SKIP_INDIVIDUAL_DETECTION = False
+
+SKIP_BEHAVIOR_TOTAL_SF = False
+SKIP_BEHAVIOR_TOTAL_MF = False
+
+SKIP_BEHAVIOR_BINARY_SF = False
+SKIP_BEHAVIOR_BINARY_MF = False  
+                             
+SKIP_MOVING_FILES = False
+SKIP_REMOVING_TEMPORARY_FILES = False
+                             
+SKIP_PP_TOTAL = False
+SKIP_PP_BINARY = False
+
+SKIP_OD_DENSITY = False
 
 ![Image_prediction](images/prediction_csv.png)
+
+then predict_csv...
 
 ### Evaluation
 
