@@ -244,7 +244,7 @@ A further possibility to first evaluate the performance of BOVIDS and second to 
 Finally, BOVIDS produces an xlsx-file per night (stored in FINAL_STORAGE_PREDICTION_FILES/species/zoo/individual/total/final/) with the final prediction as well as statistical key quantities (like the percentages found in the activity budget). This file contains also a sheet in which each phase (a subsequent series of time-intervals of the same activity) is listed. 
 * compare images with prediction
  * The cut-out images stored in FINAL_STORAGE_CUTOUT/individual_code/yyyy-mm-dd/multiple_frame/ are named after the time-interval they are correspondent to (up to a shift of 1). One can easily scroll through such a folder and detect manually the moment an activity event ends and a new event starts. This can be compared with the phase list of the corresponding xlsx-file and one can check manually very fast how many errors appear on unseen data. Of course, this step is only conducted while figuring out if the neural networks (action classifiers) need more training data or if they are already decent and can be seen as a *randomized sampling check.*
-![images/example_xlsx_night.png](images/example_activity_budget.png) 
+![images/example_xlsx_night.png](images/example_xlsx_night.png) 
 
 
 ### Presentation
