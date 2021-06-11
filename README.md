@@ -223,9 +223,11 @@ If multiple GPUs are present, decide which GPU is used for prediction (multiple 
 
 
 ### Evaluation
+* quality criteria recap, image per night, od density, compare images with xslx-file, show xlsx-file itself
 
 ### Presentation
-
+* overview per individual (with image)
+* overview per species (with image)
 
 
 
