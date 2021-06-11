@@ -236,7 +236,7 @@ Furthermore, one can compare the prediction of BOVIDS on the manually annotated 
 A further possibility to first evaluate the performance of BOVIDS and second to get a first impression of the activity budget per night, is a graphical representation of the corresponding night.
 * time-line per night
   * Those images will be automatically produced by BOVIDS during post-processing and can be found in FINAL_STORAGE_PREDICTION_FILES/species/zoo/individual/total/final/. It can be used to see whether the animal is out of view for long periods of time and if there is an unexpected flattering between activities. If so, and the user is not sure that the neural networks already perform very decently, such data might be suspicious and needs to be checked.
-  [!images/example_activity_budget.png](images/example_activity_budget.png) 
+  ![images/example_activity_budget.png](images/example_activity_budget.png) 
 * od density, 
 * compare images with xslx-file (show xlsx-file itself)
 
