@@ -164,10 +164,22 @@ After manual re-annotation, *object_detection/training/prepare_data_od.py* is us
 ## Data prediction and evaluation
 The prediction pipeline is controlled by three scripts, namely *global/global_configuration.py*, *prediction/predict_csv.py*, *prediction/configuration.py*. The content of the global configuration is explained below, basically, it gives the possibility to store global information like the path to an object detector used for a specific enclosurecode and similar information. The local file *prediction/configuration.py* is used to configure the storage of the videos and the storage of the files that are created by BOVIDS per night.
 
+Before explaining the prediction itself, we explain a few of the hidden features of BOVIDS that are necessary in order to use the prediction pipeline. As already described, BOVIDS can take multiple video streams per enclosure and puts them automatically together. 
+
+### Ordering video frames
+Depending on the number of video streams and their resolution, the different input streams are put together differently (see figure). The counting of the streams is always from left to right, then from top to bot. If 3 or 5 streams are present, the 4th or 6th region will be a black frame.
+![Imagesize](images/imagesize.png)
+The global_configuration.py contains the dictionary VIDEO_ORDER_PLACEMENT in which the keys are the enclosure_video_code or the enclosure_code and the values are a list of the video numbers of the corresponding streams ordering them by the desired occurrence. (example: 'oryx_fantasyzoo_2': [3, 1] would place videostream 3 first and videostream 1 second for this enclosure).
+
+### Adding black regions
+In this context, it is possible to add "black regions" onto the produced outcome, thus regions that are recorded by multiple streams or regions that partly record different enclosures. Adding those black regions carefully improves the quality of the prediction significantly as the object detector is more likely to identify the correct individuals. To this end, the global configuration file contains the dictionary VIDEO_BLACK_REGIONS whose keys are again the enclosure_video_code or the enclosure_code. The values are lists of numpy-arrays containing the coordinates of the polygons that will be drawn black.
+![Imagesize](images/blackregions.png)
+
+
 ### Truncation
 As the classification of images suffering from severe truncation effects is fairly difficult, BOVIDS provides a "truncation" parameter that allows to withdraw bounding boxes very close to the image border. To this end, for each night that should be predicted by BOVIDS, the user can define four boundaries (pixel from top and from left) such that bounding boxes being completely inside those regions are treated differently: one can choose in the global configuration file (see below) which behaviour class will be given to those images (standard: out of view) if the truncation phase is short, medium or long. Depending on the number of video streams and their resolution, the coordinates of the bounding boxes need to be adjusted, see the following figure:
 
-![Imagesize](images/imagesize.png)
+
 
 ### Prediction
 
