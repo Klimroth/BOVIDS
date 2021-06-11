@@ -223,13 +223,17 @@ If multiple GPUs are present, decide which GPU is used for prediction (multiple 
 
 
 ### Evaluation
-* quality criteria recap, 
-* post-processing check
-* get accuracy
+As discussed in detail in the corresponding contributions, there are various possibilities to ensure accurate predictions and validate the current system. The first one corresponds to the object detector.
+* od density
+** In FINAL_STORAGE_PREDICTION_FILES/species/zoo/individual/ we find an .xlsx sheet showing the percentage of detections per 30 minutes of a video. If this percentage is low, one needs to check if the animal is really out of view or if the object detector fails. 
+
+Furthermore, one can compare the prediction of BOVIDS on the manually annotated videos. It is also fairly important to check whether misclassifications stem from poor choices of the neural networks or from a suboptimal choice of post-processing rules.
+* post-processing check and accuracy
+** *evaluation/accuracy_pp_rules/main.py* is a small script that can be used to analyse the performance of the post-processing rules. It comes with *evaluation/accuracy_pp_rules/configuration.py* which contains similar variables as the global configuration (post-processing rules) and need to be modified in advance. The script allows to either compare post-processed real data with not post-processed real data (COMPARE_REAL_WITH_REALPP = True) such that it is easy to measure the error occuring by dismissing short phases if a human labels the video (this is some kind of a sytematical error). 
+** Furthermore, it compares the prediction of BOVIDS with the real data and the post-processed real data (COMPARE_REAL_WITH_AI = True, COMPARE_REALPP_WITH_AI = True). For this, it requires the prediction of BOVIDS (FINAL_STORAGE_PREDICTION_FILES) as well as the manually annotated videos as a boris-csv file (as described above, *action classification storage*). It outputs an xlsx-file per individual containing the accuracy, f-score as well as the deviation of the number of phases per night. Furthermore, it shows a confusion matrix per night as well as phases which are misclassified and last at least 4 time-intervals (the number 4 can be easily adjusted by setting ERROR_TOLERANCE_INTERVALS to a different value).
 * image per night, 
 * od density, 
-* compare images with xslx-file, 
-* show xlsx-file itself
+* compare images with xslx-file (show xlsx-file itself)
 
 ### Presentation
 * overview per individual (with image)
