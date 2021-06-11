@@ -177,7 +177,11 @@ In this context, it is possible to add "black regions" onto the produced outcome
 
 
 ### Truncation
-As the classification of images suffering from severe truncation effects is fairly difficult, BOVIDS provides a "truncation" parameter that allows to withdraw bounding boxes very close to the image border. To this end, for each night that should be predicted by BOVIDS, the user can define four boundaries (pixel from top and from left) such that bounding boxes being completely inside those regions are treated differently: one can choose in the global configuration file (see below) which behaviour class will be given to those images (standard: out of view) if the truncation phase is short, medium or long. Depending on the number of video streams and their resolution, the coordinates of the bounding boxes need to be adjusted, see the following figure:
+As the classification of images suffering from severe truncation effects is fairly difficult, BOVIDS provides a "truncation" parameter that allows to withdraw bounding boxes very close to the image border. To this end, for each night that should be predicted by BOVIDS, the user can define four boundaries (pixel from top and from left) such that bounding boxes being completely inside those regions are treated differently: one can choose in the global configuration file (see below) which behaviour class will be given to those images (standard: out of view) if the truncation phase is short, medium or long. 
+
+### Post-Processing rules
+One very important feature of BOVIDS is the post-processing (see a detailed discussion in the publications). To put it short: depending on the species it might be very unrealistic to observe very short phases of a certain behaviour - in this case, it is well possible that such short phases are due to short misclassifications that can be corrected. The correct choice of the post-processing rules is highly delicate and will be discussed later in detail (--> paragraph *evaluation*). The global configuration contains a dictionary POST_PROCESSING_RULES (keys: name, values: dictionaries) defining the set of rules (multiple such sets can be stored and the desired one can be chosen during prediction). The rolling average entries define the order of the rolling averages, the other entries dismiss phases with length (time-intervals) up to the number given by the rules (for instance, AAALAA will be converted to AAAAAA if 'ALA' > 0.). We denote 'A = standing (active)', 'L = lying-head up (lying)' and 'S = lying - head down (rem sleep position)', 'O = out of view'. Finally, the truncation parameters can be found here as well.
+
 
 
 
@@ -194,9 +198,6 @@ As the classification of images suffering from severe truncation effects is fair
 
 ### Storage of networks
 
-### Adding black regions
-
-### Ordering video frames
 
 ### 
 
