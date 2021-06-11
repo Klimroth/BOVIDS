@@ -7,7 +7,7 @@ BOVIDS is an end-to-end deep learning based tool for posture estimation of ungul
 Inside this contribution we explain the structure of BOVIDS and we highly recommend to read the methods section prior to the short instructions presented here as we assume that a potential user knows how the parts of BOVIDS interact with each other.
 
 ## License and citation
-Re-use, distribution and modification as well as extending contributions under the MIT license are highly welcome. If you use BOVIDS or parts of it, please consider citing the following publications:
+Re-use, distribution and modification as well as extending contributions under the GPL-3.0 License are highly welcome. If you use BOVIDS or parts of it, please consider citing the following publications:
 
 BOVIDS software package and an application:
 >  
