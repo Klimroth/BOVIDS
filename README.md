@@ -187,7 +187,7 @@ explain structure + place in configuration and in global configuration
 
 ### Prediction
 
-![Image_prediction](images/predict_csv.png)
+![Image_prediction](images/prediction_csv.png)
 
 ### Evaluation
 
