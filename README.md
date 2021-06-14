@@ -246,7 +246,7 @@ Finally, BOVIDS produces an xlsx-file per night (stored in FINAL_STORAGE_PREDICT
 
 
 ### Presentation
-There are two additional tools contained in BOVIDS that allow to present the data for one specific individual (*presentation/get_individual_overview.py*) and for multiple individuals of one species (*presentation/get_species_overview.py*) respectively. Both scripts require the structure provided by FINAL_STORAGE_PREDICTION_FILES as an input, furthermore, one can choose the individuals which will be contained in the merged data. While merging the data, the script allows to add certain columns of information (like an anonymised individual code or the kind of stabelling) in order to make data analysis with standard statistic tools like R more accessible. Therefore, one needs to create an **individual_info.csv**-file first.
+There are two additional tools contained in BOVIDS that allow to present the data for one specific individual (*presentation/get_individual_overview.py*) and for multiple individuals of one species (*presentation/get_species_overview.py*) respectively. Both scripts require the structure provided by FINAL_STORAGE_PREDICTION_FILES as an input, furthermore, one can choose the individuals which will be contained in the merged data. While merging the data, the script allows to add certain columns of information (like an anonymised individual code or the kind of stabelling) in order to make data analysis with standard statistic tools like R more accessible. Therefore, one needs to create an **individual_info.csv**-file first, an example can be found in *examples/*.
 #### Preparation: Individual information
 * TODO describe list and add example into example folder
 
