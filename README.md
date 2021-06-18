@@ -7,7 +7,9 @@ BOVIDS is an end-to-end deep learning based tool for posture estimation of ungul
 Inside this contribution we explain the structure of BOVIDS and we highly recommend to read the methods section prior to the short instructions presented here as we assume that a potential user knows how the parts of BOVIDS interact with each other.
 
 ## License and citation
-Re-use, distribution and modification as well as extending contributions under the GPL-3.0 License are highly welcome. If you use BOVIDS or parts of it, please consider citing the following publications:
+Re-use, distribution and modification as well as extending contributions under the GPL-3.0 License are highly welcome. The whole bibliography *global/yolo-v4-tf.keras-master/*, based on the implementation by [taipingeric](https://github.com/taipingeric/yolo-v4-tf.keras) is avaiable under the MIT License. 
+
+If you use BOVIDS or parts of it, please consider citing the following publications:
 
 BOVIDS software package and an application:
 >  
@@ -266,7 +268,9 @@ They furthermore provide an xlsx-sheet containing the most important statistical
 
 
 ## Acknowledgement
-The yolov4 implementation of BOVIDS is based on the implementation by [taipingeric](https://github.com/taipingeric/yolo-v4-tf.keras). Parts of the prediction pipeline themselves can already be found in one of [our prior repositories](https://github.com/Klimroth/Video-Action-Classifier-for-African-Ungulates-in-Zoos).
+The yolov4 implementation of BOVIDS is based on the implementation by [taipingeric](https://github.com/taipingeric/yolo-v4-tf.keras). We added features like image augmentation and dealing with UTF-8 characters. Clearly, the whole bibliography *global/yolo-v4-tf.keras-master/* stays avaiable under the MIT License. 
+
+Parts of the prediction pipeline themselves can already be found in one of [our prior repositories](https://github.com/Klimroth/Video-Action-Classifier-for-African-Ungulates-in-Zoos).
 
 
 
