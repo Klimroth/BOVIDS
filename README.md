@@ -18,7 +18,7 @@ BOVIDS software package and an application:
 
 Technical analysis of the deep learning prediction pipeline:
 >  Hahn‐Klimroth, M, Kapetanopoulos, T, Gübert, J, Dierkes, PW. Deep learning‐based pose estimation for African ungulates in zoos. 
->  Ecol Evol. 2021; 00: 1– 18. https://doi.org/10.1002/ece3.7367 
+>  Ecol Evol. 2021; 11: 6015– 6032. https://doi.org/10.1002/ece3.7367
 
 ## Installation
 We suggest installing the necessary packages using anaconda as it will control the versions for you. 
