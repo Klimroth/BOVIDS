@@ -249,14 +249,14 @@ Finally, BOVIDS produces an xlsx-file per night (stored in FINAL_STORAGE_PREDICT
 
 
 ### Presentation
-There are two additional tools contained in BOVIDS that allow to present the data for one specific individual (*presentation/get_individual_overview.py*) and for multiple individuals of one species (*presentation/get_species_overview.py*) respectively. Both scripts require the structure provided by FINAL_STORAGE_PREDICTION_FILES as an input, furthermore, one can choose the individuals which will be contained in the merged data. While merging the data, the script allows to add certain columns of information (like an anonymised individual code or the kind of stabelling) in order to make data analysis with standard statistic tools like R more accessible. Therefore, one needs to create an **individual_info.csv**-file first, an example can be found in *examples/*.
+There are two additional tools contained in BOVIDS that allow to present the data for one specific individual (*presentation/get_individual_overview.py*) and for multiple individuals of one species (*presentation/get_species_overview.py*) respectively. Both scripts require the structure provided by FINAL_STORAGE_PREDICTION_FILES as an input, furthermore, one can choose the individuals which will be contained in the merged data. While merging the data, the script allows to add certain columns of information (like an anonymised individual code or the kind of stabling) in order to make data analysis with standard statistic tools like R more accessible. Therefore, one needs to create an **individual_info.csv**-file first, an example can be found in *examples/*.
 
-The individual info file has the columns Cod_long,	Cod_short,	Cod_ssn,	species,	age,	sex,	zoo,	stabeling,	stable with the following meaning.
+The individual info file has the columns Cod_long,	Cod_short,	Cod_ssn,	species,	age,	sex,	zoo,	stabling,	stable with the following meaning.
 * Cod_long: individual code
 * Cod_short: a probably used shorter (unique) version of the individual code
 * Cod_ssn: individual code in scientific notation, i.e. this might be used to anonymise data
 * species, age, sex, zoo: self-explaining
-* stabeling: how many individuals are in the corresponding enclosure?
+* stabling: how many individuals are in the corresponding enclosure?
 * stable: are there different species in the same (larger) area that might effect the nightly behaviour?
 
 Cod_long and Cod_ssn are necessary for the script to work, the other parameters are variable and can be adjusted just by creating a different csv-file providing the user a high degree of freedom.
