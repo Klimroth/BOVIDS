@@ -183,7 +183,7 @@ In this context, it is possible to add "black regions" onto the produced outcome
 ![Image_Regions](images/blackregions.png)
 A potential setting in which video streams were placed next to each other and certain regions were disabled can be found here.
 
-![final_video](images/example_video_merge.png)
+![final_video](images/example_video_merge.jpg)
 
 ### Truncation
 As the classification of images suffering from severe truncation effects is fairly difficult, BOVIDS provides a "truncation" parameter that allows to withdraw bounding boxes very close to the image border. To this end, for each night that should be predicted by BOVIDS, the user can define four boundaries (pixel from top and from left) such that bounding boxes being completely inside those regions are treated differently: one can choose in the global configuration file (see below) which behaviour class will be given to those images (standard: out of view) if the truncation phase is short, medium or long. 
