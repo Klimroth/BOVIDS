@@ -99,15 +99,49 @@ If the LUPUS system is used for recording, BOVIDS provides a handy converting op
 #### Repair video files
 It might happen that due to short drops in voltage a night consists of various parts or there are short sequences missing during a night. In order to make a realistic pose estimation over the whole observation time we need to make sure that all videos start and end at a known daytime and have a bitrate of 1fps. BOVIDS provides with *data_collection/video_processing.py* a collection of functions to concatenate multiple parts, to reduce the bitrate to 1fps and to fill in sequences of black frames into a video if some short sequences are missing. This program needs to be run in the video environment.
 
+## Object detection
+
+### Preparation
+
+In a first step, *object_detection/preparation/create_annotation_images.py* provides the funcitonality to cut out single frames equally distributed over various nights. Those single images are then annotated manually with [labelImg by tzutalin](https://github.com/tzutalin/labelImg), take care that the labels coincide with the individualcodes and take care that the labels are stored in the PASCAL_VOC style.
+
+It is suggested to save the images in the structure described above (object detection storage).
+
+
+### Training
+In the end, the training script of the object detector *object_detection/training/training_yolov4.py* BOVIDS requires all images that should be part of the training and validation set in one folder and a .txt-file containing the annotations. 
+
+#### Generating the training set
+BOVIDS provides *object_detection/training/prepare_data_od.py* which contains functions to create such a folder out of the previously described structure. It can be used to merge the data of various enclosures (for instance, if an object detector for many enclosures that only contain one individual each needs to be trained). Further, it is possible to rename the labels that were previously given. Once all images and, respectively, labels, are stored inside the required structure, *object_detection/training/training_yolov4.py* is be used to create the required label-text file. 
+
+#### Training of an initial object detector
+The same script is then used to train an object detector. Take care of the model weights, if no valid weights are presented, it will transfer learn on imagenet weights. Transfer-learning from previously trained models is only possible if the number of classes (thus, the number of individuals that need to be distinguished) coincides.
+
+
+### Offline hard example mining
+
+#### Prepare a training-csv file
+A so-called **training-csv-file** is a comma-separated text-csv with headers "date", "species", "enclosure number", "video numbers", "individual numbers", each line contains one night of a specific enclosure to which a boris-csv-file as an annotation exists and whose data should be part of the training set. Recall that date has the form YYYY-MM-DD, the enclosure number is one integer and videonumbers and individualnumbers are either an integer or a concatenation like 1;3;4 (meaning that video with number 1, with number 3 and with number 4 will be cut next to each other and used as one stream to the enclosure). Those .csv-files can be conveniently created with OpenOffice/LibreOffice. An example can be found in *examples/training_file.csv*. 
+
+#### Generation of automatically generated labels
+Once a designated object detector is trained, this object detector needs to be evaluated and, if necessary, finetuned. To this end, *object_detection/ohem/generate_annotation_files.py* can be used to extract images from a given set of nights and to apply the designated object detectors to create automatically generated label files. As an input, the script requires the same kind of .csv-files as described earlier (the so-called *training-csv-files*). We suggest to sample images from multiple videos, equally distributed over the observation period in order to make sure that varying light conditions or camera angles become negligible.
+
+#### Evaluation of those labels
+Similarily as in the action classification case, those labels can now be evaluated by *object_detection/ohem/evaluate_bounding_boxes.py*. This time, the user evaluates the bounding boxes drawn by the object detector as *good*, *medium*, *bad* and - if individuals need to be distinguished - *swapped*. Good images are those that could potentially be used for training a fine-tuned network. Medium are those images that are actually quite good but not optimal (like, a hoof is truncated or a part of an ear). If the quality is good enough (say, less then 5% of the bounding boxes are bad and at least 50% are good), then the network can be already used (those numbers clearly depend on the actual data and should not be taken as granted). The same python script is now used to store the good and bad images and their corresponding labels such that the bad images can now be manually annotated again (see above).
+
+![evaluate_od](images/example_od_evaluate.png)
+(From left to right: Good bounding boxes in which individuals were detected correctly and the bounding boxes are drawn smoothely (green), mediocre bounding boxen in which individuals were detected correctly but the boxes are not optimal but almost (yellow), bad bounding boxes if one individual is, for instance, not found or only small parts of an individual are detected (bad) and finally, swapped bounding boxes in which individuals are misclassified.)
+
+#### Re-training the network
+After manual re-annotation, *object_detection/training/prepare_data_od.py* is used to create a new dataset out of the old labels, the good labels and the freshly annotated labels and images. Now, the network is trained again as described above. In principle, the whole procedure can be iterated until the quality is sufficiently high.
+
+
 ## Action classification
 ### Preparation
 #### Annotate the video files with BORIS
 In order to generate an initial training set, some nights need to be manually labelled and we propose to use BORIS (see action classification storage). It might be helpful to merge various video streams side to side in one video stream if many nights / enclosures / individuals shall be annotated at once. To this end, BOVIDS provides *action_classification/preparation/merge_video_files.py* which needs to be run in the video environment. Recall that the **boris-files** (.xlsx) need to be converted into **boris-csv-files** as described above. 
 
 ### Training of an initial network
-#### Prepare a training-csv file
-A so-called **training-csv-file** is a comma-separated text-csv with headers "date", "species", "enclosure number", "video numbers", "individual numbers", each line contains one night of a specific enclosure to which a boris-csv-file as an annotation exists and whose data should be part of the training set. Recall that date has the form YYYY-MM-DD, the enclosure number is one integer and videonumbers and individualnumbers are either an integer or a concatenation like 1;3;4 (meaning that video with number 1, with number 3 and with number 4 will be cut next to each other and used as one stream to the enclosure). Those .csv-files can be conveniently created with OpenOffice/LibreOffice. An example can be found in *action_classification/training/training_file.csv*. 
-
 
 #### Create a balanced training set
 Based on the previously created csv-trainings-file, *action_classification/training/generate_training_images.py* contains the functionality to produce balanced training images for both action classification streams (single frame and four-frame encoded). Recall that, before running the script,  well-trained object detectors are necessary. The output are folders containing images of classes 0 (standing), 1 (lying - head up) and 2 (lying - head down). Of course, BOVIDS can be used for estimating any three poses independently of the name. The code is furthermore straight forward to generalise to a different number of classes, but some programming is necessary.
@@ -137,36 +171,6 @@ Now, *action_classification/ohem/efficientnet_evaluate_examples.py* can be used 
 #### Retrain the action classifiers
 In the end, the script can be used to extract statistical values like the accuracy and, more importantly, to move the images to their real classes. Therefore, we are left with a (not necessarily strictly balanced) set of images stemming from the whole observation time - an almost perfect training set. This training set is now used to fine-tune the previous action classifiers (like in the training step described above).
 
-## Object detection
-
-### Preparation
-In a first step, *object_detection/preparation/create_annotation_images.py* provides the funcitonality to cut out single frames equally distributed over various nights. Those single images are then annotated manually with [labelImg by tzutalin](https://github.com/tzutalin/labelImg), take care that the labels coincide with the individualcodes and take care that the labels are stored in the PASCAL_VOC style.
-
-It is suggested to save the images in the structure described above (object detection storage).
-
-### Training
-In the end, the training script of the object detector *object_detection/training/training_yolov4.py* BOVIDS requires all images that should be part of the training and validation set in one folder and a .txt-file containing the annotations. 
-
-#### Generating the training set
-BOVIDS provides *object_detection/training/prepare_data_od.py* which contains functions to create such a folder out of the previously described structure. It can be used to merge the data of various enclosures (for instance, if an object detector for many enclosures that only contain one individual each needs to be trained). Further, it is possible to rename the labels that were previously given. Once all images and, respectively, labels, are stored inside the required structure, *object_detection/training/training_yolov4.py* is be used to create the required label-text file. 
-
-#### Training of an initial object detector
-The same script is then used to train an object detector. Take care of the model weights, if no valid weights are presented, it will transfer learn on imagenet weights. Transfer-learning from previously trained models is only possible if the number of classes (thus, the number of individuals that need to be distinguished) coincides.
-
-
-### Offline hard example mining
-
-#### Generation of automatically generated labels
-Once a designated object detector is trained, this object detector needs to be evaluated and, if necessary, finetuned. To this end, *object_detection/ohem/generate_annotation_files.py* can be used to extract images from a given set of nights and to apply the designated object detectors to create automatically generated label files. As an input, the script requires the same kind of .csv-files as described earlier (the so-called *training-csv-files*). We suggest to sample images from multiple videos, equally distributed over the observation period in order to make sure that varying light conditions or camera angles become negligible.
-
-#### Evaluation of those labels
-Similarily as in the action classification case, those labels can now be evaluated by *object_detection/ohem/evaluate_bounding_boxes.py*. This time, the user evaluates the bounding boxes drawn by the object detector as *good*, *medium*, *bad* and - if individuals need to be distinguished - *swapped*. Good images are those that could potentially be used for training a fine-tuned network. Medium are those images that are actually quite good but not optimal (like, a hoof is truncated or a part of an ear). If the quality is good enough (say, less then 5% of the bounding boxes are bad and at least 50% are good), then the network can be already used (those numbers clearly depend on the actual data and should not be taken as granted). The same python script is now used to store the good and bad images and their corresponding labels such that the bad images can now be manually annotated again (see above).
-
-![evaluate_od](images/example_od_evaluate.png)
-(From left to right: Good bounding boxes in which individuals were detected correctly and the bounding boxes are drawn smoothely (green), mediocre bounding boxen in which individuals were detected correctly but the boxes are not optimal but almost (yellow), bad bounding boxes if one individual is, for instance, not found or only small parts of an individual are detected (bad) and finally, swapped bounding boxes in which individuals are misclassified.)
-
-#### Re-training the network
-After manual re-annotation, *object_detection/training/prepare_data_od.py* is used to create a new dataset out of the old labels, the good labels and the freshly annotated labels and images. Now, the network is trained again as described above. In principle, the whole procedure can be iterated until the quality is sufficiently high.
 
 ## Data prediction and evaluation
 The prediction pipeline is controlled by three scripts, namely *global/global_configuration.py*, *prediction/predict_csv.py*, *prediction/configuration.py*. The content of the global configuration is explained below, basically, it gives the possibility to store global information like the path to an object detector used for a specific enclosurecode and similar information. The local file *prediction/configuration.py* is used to configure the storage of the videos and the storage of the files that are created by BOVIDS per night.
@@ -181,6 +185,7 @@ The global_configuration.py contains the dictionary VIDEO_ORDER_PLACEMENT in whi
 ### Adding black regions
 In this context, it is possible to add "black regions" onto the produced outcome, thus regions that are recorded by multiple streams or regions that partly record different enclosures. Adding those black regions carefully improves the quality of the prediction significantly as the object detector is more likely to identify the correct individuals, those regions are somehow *disabled* for BOVIDS. To this end, the global configuration file contains the dictionary VIDEO_BLACK_REGIONS whose keys are again the enclosure_video_code or the enclosure_code. The values are lists of numpy-arrays containing the coordinates of the polygons that will be drawn black.
 ![Image_Regions](images/blackregions.png)
+
 A potential setting in which video streams were placed next to each other and certain regions were disabled can be found here.
 
 ![final_video](images/example_video_merge.jpg)
