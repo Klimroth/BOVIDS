@@ -12,10 +12,10 @@ Re-use, distribution and modification as well as extending contributions under t
 If you use BOVIDS or parts of it, please consider citing the following publications:
 
 BOVIDS software package and an application:
+>  t.b.a.
 >  
+>  t.b.a.
 >  
->  
-
 Technical analysis of the deep learning prediction pipeline:
 >  Hahn‐Klimroth, M, Kapetanopoulos, T, Gübert, J, Dierkes, PW. Deep learning‐based pose estimation for African ungulates in zoos. 
 >  Ecol Evol. 2021; 11: 6015– 6032. https://doi.org/10.1002/ece3.7367
