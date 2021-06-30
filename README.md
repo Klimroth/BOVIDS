@@ -106,8 +106,8 @@ In order to generate an initial training set, some nights need to be manually la
 
 ### Training of an initial network
 #### Prepare a training-csv file
-A so-called **training-csv-file** is a comma-separated text-csv with headers "date", "species", "enclosure number", "video numbers", "individual numbers", each line contains one night of a specific enclosure to which a boris-csv-file as an annotation exists and whose data should be part of the training set. Recall that date has the form YYYY-MM-DD, the enclosure number is one integer and videonumbers and individualnumbers are either an integer or a concatenation like 1;3;4 (meaning that video with number 1, with number 3 and with number 4 will be cut next to each other and used as one stream to the enclosure). Those .csv-files can be conveniently created with OpenOffice/LibreOffice. An example can be found in *action_classification/training/example_training_file.csv*. 
-* TODO: example :left_speech_bubble:
+A so-called **training-csv-file** is a comma-separated text-csv with headers "date", "species", "enclosure number", "video numbers", "individual numbers", each line contains one night of a specific enclosure to which a boris-csv-file as an annotation exists and whose data should be part of the training set. Recall that date has the form YYYY-MM-DD, the enclosure number is one integer and videonumbers and individualnumbers are either an integer or a concatenation like 1;3;4 (meaning that video with number 1, with number 3 and with number 4 will be cut next to each other and used as one stream to the enclosure). Those .csv-files can be conveniently created with OpenOffice/LibreOffice. An example can be found in *action_classification/training/training_file.csv*. 
+
 
 #### Create a balanced training set
 Based on the previously created csv-trainings-file, *action_classification/training/generate_training_images.py* contains the functionality to produce balanced training images for both action classification streams (single frame and four-frame encoded). Recall that, before running the script,  well-trained object detectors are necessary. The output are folders containing images of classes 0 (standing), 1 (lying - head up) and 2 (lying - head down). Of course, BOVIDS can be used for estimating any three poses independently of the name. The code is furthermore straight forward to generalise to a different number of classes, but some programming is necessary.
@@ -131,7 +131,8 @@ Once first versions of the action classifiers are trained, those can be used to 
 
 Now, *action_classification/ohem/efficientnet_evaluate_examples.py* can be used to display the single-frame and multiple-frame images next to each other and show the prediction given through the prediction system as a color code. A user can now give his own label. 
 
-* :left_speech_bubble: IMAGE EXAMPLE!!!
+![evaluate_ac](images/example_ac_evaluate.png)
+(Color codes exist for each activity class, on the l.h.s. the label by the single frame classifier can be found and on the r.h.s. the one by the multiple frame classifier. The inner color bars are the label given by the user.)
 
 #### Retrain the action classifiers
 In the end, the script can be used to extract statistical values like the accuracy and, more importantly, to move the images to their real classes. Therefore, we are left with a (not necessarily strictly balanced) set of images stemming from the whole observation time - an almost perfect training set. This training set is now used to fine-tune the previous action classifiers (like in the training step described above).
@@ -161,7 +162,8 @@ Once a designated object detector is trained, this object detector needs to be e
 #### Evaluation of those labels
 Similarily as in the action classification case, those labels can now be evaluated by *object_detection/ohem/evaluate_bounding_boxes.py*. This time, the user evaluates the bounding boxes drawn by the object detector as *good*, *medium*, *bad* and - if individuals need to be distinguished - *swapped*. Good images are those that could potentially be used for training a fine-tuned network. Medium are those images that are actually quite good but not optimal (like, a hoof is truncated or a part of an ear). If the quality is good enough (say, less then 5% of the bounding boxes are bad and at least 50% are good), then the network can be already used (those numbers clearly depend on the actual data and should not be taken as granted). The same python script is now used to store the good and bad images and their corresponding labels such that the bad images can now be manually annotated again (see above).
 
-* TODO: image evaluation good, medium, bad (different example as in paper!)
+![evaluate_od](images/example_od_evaluate.png)
+(From left to right: Good bounding boxes in which individuals were detected correctly and the bounding boxes are drawn smoothely (green), mediocre bounding boxen in which individuals were detected correctly but the boxes are not optimal but almost (yellow), bad bounding boxes if one individual is, for instance, not found or only small parts of an individual are detected (bad) and finally, swapped bounding boxes in which individuals are misclassified.)
 
 #### Re-training the network
 After manual re-annotation, *object_detection/training/prepare_data_od.py* is used to create a new dataset out of the old labels, the good labels and the freshly annotated labels and images. Now, the network is trained again as described above. In principle, the whole procedure can be iterated until the quality is sufficiently high.
@@ -180,7 +182,8 @@ The global_configuration.py contains the dictionary VIDEO_ORDER_PLACEMENT in whi
 In this context, it is possible to add "black regions" onto the produced outcome, thus regions that are recorded by multiple streams or regions that partly record different enclosures. Adding those black regions carefully improves the quality of the prediction significantly as the object detector is more likely to identify the correct individuals, those regions are somehow *disabled* for BOVIDS. To this end, the global configuration file contains the dictionary VIDEO_BLACK_REGIONS whose keys are again the enclosure_video_code or the enclosure_code. The values are lists of numpy-arrays containing the coordinates of the polygons that will be drawn black.
 ![Image_Regions](images/blackregions.png)
 A potential setting in which video streams were placed next to each other and certain regions were disabled can be found here.
-* TODO: Bild Beispiel
+
+![final_video](images/example_video_merge.png)
 
 ### Truncation
 As the classification of images suffering from severe truncation effects is fairly difficult, BOVIDS provides a "truncation" parameter that allows to withdraw bounding boxes very close to the image border. To this end, for each night that should be predicted by BOVIDS, the user can define four boundaries (pixel from top and from left) such that bounding boxes being completely inside those regions are treated differently: one can choose in the global configuration file (see below) which behaviour class will be given to those images (standard: out of view) if the truncation phase is short, medium or long. 
