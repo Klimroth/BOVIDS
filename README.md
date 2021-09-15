@@ -37,7 +37,7 @@ We suggest installing the necessary packages using anaconda as it will control t
 If you are on linux, make sure to have the following packages installed.
 > libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
 
-Some parts of BOVIDS (i.e. if you want to use the tools for editing video files) require moviepy. As it is fairly likely to create a version clash between opencv, ffmpeg and moviepy, we suggest to create a different environment in that case. If not stated explicitely, the scripts provided by BOVIDS shall be run inside this bovids-environment.
+Some parts of BOVIDS (i.e. if you want to use the tools for editing video files) require moviepy. As it is fairly likely to create a version clash between opencv, ffmpeg and moviepy, we suggest to create a different environment in that case. If not stated explicitely, the scripts provided by BOVIDS shall be run inside the bovids-environment.
 
 >conda create -n "video" python==3.7
 >
