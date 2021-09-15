@@ -282,6 +282,7 @@ The yolov4 implementation of BOVIDS is based on the implementation by [taipinger
 
 Parts of the prediction pipeline themselves can already be found in one of [our prior repositories](https://github.com/Klimroth/Video-Action-Classifier-for-African-Ungulates-in-Zoos).
 
+We gained great support during data collection from the directors, curators and keepers of the participating zoos: Königlicher Burgers Zoo Arnheim, Tierpark Berlin, Zoo Berlin, Zoo Vivarium Darmstadt, Zoo Dortmund, Zoo Duisburg, Zoo Frankfurt, Zoom Erlebniswelt Gelsenkirchen, Erlebnis-Zoo Hannover, Zoo Heidelberg, Kölner Zoo, Zoo Krefeld, Opel-Zoo Kronberg, Zoo Landau, Zoo Leipzig, Allwetterzoo Münster, Zoo Neuwied, Zoo Osnabrück, Zoo Schwerin, Der Grüne Zoo Wuppertal. 
 
 
 
