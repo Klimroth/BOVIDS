@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 __author__ = "Max Hahn-Klimroth, Tobias Kapetanopoulos"
 __copyright__ = "Copyright 2020, M. Hahn-Klimroth, T. Kapetanopoulos, J. Gübert, P. Dierkes"
 __credits__ = ["J. Gübert", "P. Dierkes"]
-__license__ = "GPL-3.0"
-__version__ = "1.0"
+__license__ = "MIT"
+__version__ = "1.1"
+__maintainer__ = "M. Hahn-Klimroth"
 __status__ = "Development"
+
+"""
+Version 2022-01-13: 
+    apply_rolling_average, calculate_joint_prediction,
+    _single_frame_prediction_to_intervalprediction: added rounding to 6 decimals
+"""
 import configuration as cf
 import copy
 import csv, os
@@ -14,7 +20,7 @@ import numpy as np
 from openpyxl import Workbook
 import matplotlib.pyplot as plt
 from matplotlib.collections import PolyCollection
-
+import cv2
 
 def ensure_dir(directory):
     if not os.path.exists(directory):
@@ -37,10 +43,12 @@ def post_process_night(single_frame_csv, joint_interval_csv,
                        extension = '',
                        post_processing_rules = cf.POST_PROCESSING_RULES['Standard'],
                        truncation_rules = {},
+                       truncation_areas = {},
                        current_video_start = 17,
                        current_video_end = 7,
                        behavior_names = cf.BEHAVIOR_NAMES,
-                       logfile = ''):
+                       logfile = '',
+                       out_regulations = cf.OUT_REGULATIONS):
     
     
     def _map_behaviors( phase_list, behavior_mapping = behavior_mapping, pp_rules = post_processing_rules):
@@ -58,9 +66,9 @@ def post_process_night(single_frame_csv, joint_interval_csv,
             curr_dist = np.array([0.0]*len(behavior_names))
             
             for k in range(j - go_back_here, j+1):
-                curr_dist += list_of_dist[k]*weights*(potency**(j-k))
+                curr_dist += np.around(list_of_dist[k]*weights, 8) #*(potency**(j-k))
             curr_dist = curr_dist / np.linalg.norm(curr_dist, ord=1)
-            rolling_avg_per_img.append(curr_dist)
+            rolling_avg_per_img.append(np.around(curr_dist, 6))
         
         return rolling_avg_per_img
     
@@ -90,10 +98,10 @@ def post_process_night(single_frame_csv, joint_interval_csv,
         for interval in list_of_intervals:
             curr = np.array( [0.0]*len(behavior_names) )
             for img_dist in interval:
-                curr += np.array( img_dist )
+                curr += np.around(np.array( img_dist ), 8)
             curr = curr / np.linalg.norm(curr, ord=1)
             
-            ret.append(curr)
+            ret.append(np.around(curr,6))
         return ret
     
     def _calculate_joint_prediction( dist1, dist2, weights, num_behav = 5, is_test = is_test ):
@@ -131,7 +139,7 @@ def post_process_night(single_frame_csv, joint_interval_csv,
             pred1 = dist1[j]
             pred2 = dist2[j]
             
-            pred = weights[0] * np.array(pred1) + weights[1]*np.array(pred2)
+            pred = np.around(weights[0] * weights[1]*np.array(pred2), 6)
             
             ret.append(pred)
         
@@ -197,8 +205,11 @@ def post_process_night(single_frame_csv, joint_interval_csv,
                 start_interval = j
                 LastBehav = DistLine
             j += 1
-
-        phases.append([iCurrLen*timeinterval, LastBehav, phases[-1][3] + 1, phases[-1][3] + 1 + iCurrLen])
+        
+        if len(phases) == 0:
+            phases.append( [iCurrLen*timeinterval, LastBehav, start_interval, j-1] )
+        else:
+            phases.append([iCurrLen*timeinterval, LastBehav, phases[-1][3] + 1, phases[-1][3] + 1 + iCurrLen])
         return phases
     
     
@@ -230,8 +241,11 @@ def post_process_night(single_frame_csv, joint_interval_csv,
             if len(phase_list) <= 1:
                 return False
             
+            if phase_list[0][1] == 4:
+                phase_list[0][1] = 3
+                return True
             l = phase_list[0][0]
-            if l < 9*interval_len:
+            if l < 5*9*interval_len:
                 phase_list[0][1] = phase_list[1][1]
                 return True
             
@@ -292,6 +306,10 @@ def post_process_night(single_frame_csv, joint_interval_csv,
                     if phase_list[j][0] < pp_rules['MIN_LEN_SLO']*interval_len:
                         phase_list[j][1] = 2
                         changes_done = True
+                elif [last_behavior, current_behavior, next_behavior] == [3,1,3]:
+                    if phase_list[j][0] < pp_rules['MIN_LEN_OLO']*interval_len:
+                        phase_list[j][1] = 3
+                        changes_done = True
                         
                         
                 # standing
@@ -326,6 +344,10 @@ def post_process_night(single_frame_csv, joint_interval_csv,
                 elif [last_behavior, current_behavior, next_behavior] == [3,0,2]:
                     if phase_list[j][0] < pp_rules['MIN_LEN_OAS']*interval_len:
                         phase_list[j][1] = 2
+                        changes_done = True
+                elif [last_behavior, current_behavior, next_behavior] == [3,0,3]:
+                    if phase_list[j][0] < pp_rules['MIN_LEN_OAO']*interval_len:
+                        phase_list[j][1] = 3
                         changes_done = True
                         
                         
@@ -363,14 +385,31 @@ def post_process_night(single_frame_csv, joint_interval_csv,
                     if phase_list[j][0] < pp_rules['MIN_LEN_LSO']*interval_len:
                         phase_list[j][1] = 1
                         changes_done = True
+                elif [last_behavior, current_behavior, next_behavior] == [3,2,3]:
+                    if phase_list[j][0] < pp_rules['MIN_LEN_OSO']*interval_len:
+                        phase_list[j][1] = 3
+                        changes_done = True
+                
+
                         
                 # truncation
                 elif current_behavior == 4: 
                     if phase_list[j][0] < pp_rules['MIN_LEN_TRUNCATION']*interval_len:
                         phase_list[j][1] = last_behavior
-                        changes_done = True         
-        
+                        changes_done = True     
+                    elif phase_list[j][0] >= pp_rules['MIN_LEN_TRUNCATION_SWAP']*interval_len:
+                        phase_list[j][1] = pp_rules['TRUNCATION_REAL_BEHAVIOR_LONG']
+                        changes_done = True 
+                    elif phase_list[j][0] >= pp_rules['MIN_LEN_TRUNCATION']*interval_len and phase_list[j][0] < pp_rules['MIN_LEN_TRUNCATION_SWAP']*interval_len:
+                        phase_list[j][1] = pp_rules['TRUNCATION_INTERMEDIATE']
+            
             phase_list = _join_phases(phase_list)
+            phase_list, x = _remove_out_fluctuation(phase_list) 
+
+            if changes_done or x:
+                changes_done = True
+            else:
+                changes_done = False
             
         return phase_list
 
@@ -388,6 +427,7 @@ def post_process_night(single_frame_csv, joint_interval_csv,
             j += 1
         
         return phase_list
+
     
     def _remove_truncated_images(phase_list, pp_rules = post_processing_rules, interval_len = cf.INTERVAL_LENGTH):
         """
@@ -633,21 +673,29 @@ def post_process_night(single_frame_csv, joint_interval_csv,
     def _mark_truncated_images_single(single_frame_dist, 
                                       logfile,
                                       truncation_rules = truncation_rules,
+                                      truncation_areas = truncation_areas,
                                       position_files = position_files,
-                                      interval_length = cf.INTERVAL_LENGTH):
+                                      interval_length = cf.INTERVAL_LENGTH,
+                                      trunc_top_standard = cf.TRUNCATION_TOP_STANDARD,
+                                      trunc_bot_standard = cf.TRUNCATION_BOT_STANDARD,
+                                      trunc_left_standard = cf.TRUNCATION_LEFT_STANDARD,
+                                      trunc_right_standard = cf.TRUNCATION_RIGHT_STANDARD):
+        
         
         truncation_upper = truncation_rules['up']
         truncation_lower = truncation_rules['bot']
         truncation_left = truncation_rules['left']
         truncation_right = truncation_rules['right']
-
+        
+        if [truncation_upper, truncation_lower, truncation_left, truncation_right] == [trunc_top_standard, trunc_bot_standard, trunc_left_standard, trunc_right_standard] and len(truncation_areas) == 0:
+            return single_frame_dist
         ret = []
-        for j in range(len(single_frame_dist)):            
+        for j in range(len(single_frame_dist)):   
             if np.argmax(single_frame_dist[j]) == 3:
                 ret.append(single_frame_dist[j])
                 continue
             
-            time_interval = str((j // interval_length ) + 1).zfill(7)
+            time_interval = str(((j+1) // interval_length ) + 1).zfill(7)
             pos_info = time_interval + '.txt'
             if not os.path.exists(position_files + pos_info):
                 ret.append(single_frame_dist[j])
@@ -660,19 +708,36 @@ def post_process_night(single_frame_csv, joint_interval_csv,
             index = 0
             
             for box_info in info_content:
-                if box_info.startswith( str(j).zfill(7) ):
+                if box_info.startswith( str(j+1).zfill(7) ):
                     found_img = True
                     break
                 index += 1
-            
+
             if found_img:
                 coordinates = info_content[index].split('-')[1].split('*')
                 y1, x1, y2, x2 = int(coordinates[0]), int(coordinates[1]), int(coordinates[2]), int(coordinates[3])
+                is_trunc_area = False
                 
                 if x2 < truncation_left or x1 > truncation_right or y1 > truncation_lower or y2 < truncation_upper:
                     ret.append( [0.0, 0.0, 0.0, 0.0, 1.0] )
-                    with open(logfile, 'a+') as file:
-                        file.writelines([str(j) + '\n'])
+                    is_trunc_area = True
+                
+                
+                if is_trunc_area:
+                    continue
+                
+
+                if len(truncation_areas) == 0:
+                    ret.append( single_frame_dist[j]  )
+                    continue
+                    # np.array( [ [x0, y0], ..., [xn, yn] ] )
+                truncation_areas = truncation_areas.reshape((-1,1,2)).astype(np.int32)
+
+                if cv2.pointPolygonTest(truncation_areas, (x1,y1), False) >= 0 and cv2.pointPolygonTest(truncation_areas, (x1,y2), False) >= 0 and cv2.pointPolygonTest(truncation_areas, (x2,y1), False) >= 0 and cv2.pointPolygonTest(truncation_areas, (x2,y2), False) >= 0:
+                    is_trunc_area = True
+
+                if is_trunc_area:
+                    ret.append( [0.0, 0.0, 0.0, 0.0, 1.0] )           
                 else:
                     ret.append( single_frame_dist[j]  )
             else:
@@ -682,16 +747,23 @@ def post_process_night(single_frame_csv, joint_interval_csv,
     
     def _mark_truncated_images_joint(joint_frame_dist, 
                                      truncation_rules = truncation_rules, 
+                                     truncation_areas = truncation_areas,
                                      position_files = position_files,
                                      interval_len = cf.INTERVAL_LENGTH,
                                      images_per_interval = cf.IMAGES_PER_INTERVAL,
-                                     behavior_names = cf.BEHAVIOR_NAMES):
+                                     behavior_names = cf.BEHAVIOR_NAMES,
+                                     trunc_top_standard = cf.TRUNCATION_TOP_STANDARD,
+                                      trunc_bot_standard = cf.TRUNCATION_BOT_STANDARD,
+                                      trunc_left_standard = cf.TRUNCATION_LEFT_STANDARD,
+                                      trunc_right_standard = cf.TRUNCATION_RIGHT_STANDARD):
         
         truncation_upper = truncation_rules['up']
         truncation_lower = truncation_rules['bot']
         truncation_left = truncation_rules['left']
         truncation_right = truncation_rules['right']
         
+        if [truncation_upper, truncation_lower, truncation_left, truncation_right] == [trunc_top_standard, trunc_bot_standard, trunc_left_standard, trunc_right_standard] and len(truncation_areas) == 0:
+            return joint_frame_dist
         ret = []
         for j in range(len(joint_frame_dist)):            
             if np.argmax(joint_frame_dist[j]) == 3:
@@ -715,8 +787,18 @@ def post_process_night(single_frame_csv, joint_interval_csv,
                 coordinates = info_content[index].split('-')[1].split('*')
                 y1, x1, y2, x2 = int(coordinates[0]), int(coordinates[1]), int(coordinates[2]), int(coordinates[3])
                 
+                
                 if x2 < truncation_left or x1 > truncation_right or y1 > truncation_lower or y2 < truncation_upper:
                     amount_truncated += 1
+                else:    
+                    area = truncation_areas
+                    is_trunc_area = False
+                    if len(area) > 0:
+                        if cv2.pointPolygonTest(area, (x1,y1), False) >= 0 and cv2.pointPolygonTest(area, (x1,y2), False) >= 0 and cv2.pointPolygonTest(area, (x2,y1), False) >= 0 and cv2.pointPolygonTest(area, (x2,y2), False) >= 0:
+                            is_trunc_area = True
+                    if is_trunc_area:
+                        amount_truncated += 1
+                
             
             curr_dist = joint_frame_dist[j]
             
@@ -737,7 +819,7 @@ def post_process_night(single_frame_csv, joint_interval_csv,
             Removes those fluctuations between out and lying or standing if out is not too long and the rest is sufficiently long
         """
         
-        def _get_current_run_endindex(start_index, phase_list, max_out):
+        def _get_current_run_endindex_out(start_index, phase_list, max_out):
             actual_behavior = phase_list[start_index-1][1]
             is_run = True
             j = start_index
@@ -755,11 +837,35 @@ def post_process_night(single_frame_csv, joint_interval_csv,
                     is_run = False
             
             return j, total_dur_actual_behavior, total_dur_out
-                    
+        
+        def _get_current_run_endindex_behav(start_index, phase_list, max_behav):
+            actual_behavior = phase_list[start_index-1][1]
+            is_run = True
+            j = start_index
+            total_dur_actual_behavior = phase_list[start_index-1][0]
+            total_dur_out = 0
+            while is_run and j < len(phase_list):
+                curr_behav = phase_list[j][1]
+                if curr_behav == actual_behavior and phase_list[j][0] <= max_behav:
+                    total_dur_actual_behavior += phase_list[j][0]
+                    j += 1
+                elif curr_behav == 3:
+                    total_dur_out += phase_list[j][0]
+                    j += 1
+                else:
+                    is_run = False
+            
+            return j, total_dur_actual_behavior, total_dur_out
+        
                     
             
         max_out = post_processing_rules['OUT_FLUCTUATION_REMOVAL_MAX']*interval_len
-        min_actual_behavior = post_processing_rules['OUT_FLUCTUATION_REMOVAL_MIN_BEHAV']
+        max_behav = post_processing_rules['OUT_FLUCTUATION_REMOVAL_BEHAV_MAX']*interval_len
+        min_actual_behavior = post_processing_rules['OUT_FLUCTUATION_REMOVAL_PERC']
+        
+        max_out_active = post_processing_rules['OUT_FLUCTUATION_REMOVAL_MAX_A']*interval_len
+        max_behav_active = post_processing_rules['OUT_FLUCTUATION_REMOVAL_BEHAV_MAX_A']*interval_len
+        min_actual_behavior_active = post_processing_rules['OUT_FLUCTUATION_REMOVAL_PERC_A']
         
 
         j = 1
@@ -770,24 +876,45 @@ def post_process_night(single_frame_csv, joint_interval_csv,
             next_behavior = phase_list[j+1][1]
 
             if current_behavior == 3:
-                if phase_list[j][0] > max_out:
+                
+                if last_behavior == 0:
+                    out_thresh = max_out_active
+                    behavior_thresh_dur = max_behav_active
+                    behavior_thresh_perc = min_actual_behavior_active                
+                else:
+                    out_thresh = max_out
+                    behavior_thresh_dur = max_behav
+                    behavior_thresh_perc = min_actual_behavior                    
+                
+                if phase_list[j][0] > out_thresh:
                     j += 1
                     continue
                 if next_behavior != last_behavior:
                     j += 1
                     continue
-                end_index, dur_run, dur_out = _get_current_run_endindex(j, phase_list, max_out)
-                if dur_run*min_actual_behavior <= dur_out:
+                end_index_out, dur_behav_in_out, dur_out_in_out = _get_current_run_endindex_out(j, phase_list, out_thresh)
+                end_index_behav, dur_behav_in_behav, dur_out_in_behav = _get_current_run_endindex_behav(j, phase_list, behavior_thresh_dur)
+                
+                
+                if dur_out_in_out / (dur_out_in_out + dur_behav_in_out) <= behavior_thresh_perc:
+                    changes_done = True
+                    for h in range(j, end_index_out):
+                        phase_list[h][1] = last_behavior
+                    j = end_index_out + 1
+                elif dur_behav_in_behav / (dur_out_in_behav + dur_behav_in_behav) <= behavior_thresh_perc and j >= end_index_behav + 2:
+                    changes_done = True
+                    for h in range(j, end_index_behav):
+                        phase_list[h][1] = 3
+                    j = end_index_behav + 1
+                else:
                     j += 1
                     continue
                 
-                changes_done = True
-                for h in range(j, end_index):
-                    phase_list[h][1] = last_behavior
-                j = end_index + 1
+                
             else:
                 j += 1
         
+        phase_list = _remove_truncated_images(phase_list) 
         phase_list = _join_phases(phase_list)
         
 
@@ -828,28 +955,34 @@ def post_process_night(single_frame_csv, joint_interval_csv,
                           observation_end = cf.GLOBAL_ENDING_TIME):
         
         
+        
         observation_intervals = _get_video_length(observation_start, observation_end)*3600 
-
+        
         ret = []
         frames_fill_start = (vid_start-observation_start)*60*60
         frames_fill_end = (observation_end - vid_end)*60*60
         
+        
         if frames_fill_start > 0:
             for i in range(frames_fill_start):
                 ret.append( [0.0, 0.0, 0.0, 1.0, 0.0] )
-        
+        elif frames_fill_start < 0:
+            single_frame_dist = single_frame_dist[(-1)*frames_fill_start:]
+            
         for j in range(len(single_frame_dist)):
             ret.append( single_frame_dist[j] )
-        
         if frames_fill_end > 0:
             for i in range(frames_fill_end):
                 ret.append( [0.0, 0.0, 0.0, 1.0, 0.0] )
+        elif frames_fill_end < 0:
+            ret = ret[:frames_fill_end]
         
         missing_intervals = observation_intervals - len(ret)
-
+        
         if missing_intervals > 0:
             for j in range(missing_intervals):
                 ret.append( [0.0, 0.0, 0.0, 1.0, 0.0] )
+
         return ret
 
     
@@ -867,24 +1000,47 @@ def post_process_night(single_frame_csv, joint_interval_csv,
         frames_fill_start = (vid_start-observation_start) * intervals_per_hour
         frames_fill_end = (observation_end - vid_end) * intervals_per_hour
         
-
+                
         if frames_fill_start > 0:
             for i in range(frames_fill_start):
                 ret.append( [0.0, 0.0, 0.0, 1.0, 0.0] )
-        
+        elif frames_fill_start < 0:
+            # rounding issue TODO: make more smooth!
+            round_issue = 0
+            if vid_start-observation_start == -2:
+                round_issue = 2
+            elif vid_start-observation_start == -1:
+                round_issue = 3
+            multiple_frame_dist = multiple_frame_dist[(-1)*frames_fill_start-round_issue:]
+            
         for j in range(len(multiple_frame_dist)):
             ret.append( multiple_frame_dist[j] )
         
         if frames_fill_end > 0:
             for i in range(frames_fill_end+1):
                 ret.append( [0.0, 0.0, 0.0, 1.0, 0.0] )
-        
+        elif frames_fill_end < 0:
+            # rounding issue TODO: make more smooth!
+            if observation_end - vid_end == -2:
+                round_issue = 2
+            elif observation_end - vid_end == -1:
+                round_issue = 1
+            ret = ret[:frames_fill_end-round_issue]
+            
         missing_intervals = observation_intervals - len(ret)
         if missing_intervals > 0:
             for j in range(missing_intervals):
                 ret.append( [0.0, 0.0, 0.0, 1.0, 0.0] )
         return ret
-
+    
+    
+    
+    
+    def _add_out_regulations_start(ensemble_sparse, out_duration):
+        ensemble_sparse[:out_duration] = [3]*out_duration
+        return ensemble_sparse
+    
+    
     # initialise logfile
     ensure_dir(output_folder_prediction)
     with open(logfile, 'a+') as file:
@@ -893,7 +1049,8 @@ def post_process_night(single_frame_csv, joint_interval_csv,
     # read single frame file and merge it to time intervals
     single_frame_dist = _read_csv(single_frame_csv)
     single_frame_dist = _mark_truncated_images_single(single_frame_dist, logfile)
-    single_frame_dist = _add_observation_time_sf(single_frame_dist)    
+    #print( [(j, j//7, single_frame_dist[j][4]) for j in range(len(single_frame_dist)) if single_frame_dist[j][4] > 0] )
+    single_frame_dist = _add_observation_time_sf(single_frame_dist)   
     single_frame_dist = _apply_rolling_average( single_frame_dist, 
                                                post_processing_rules['ROLLING_AVERAGE_SINGLE_FRAMES'], 
                                                post_processing_rules['ROLLING_AVERAGE_WEIGHTS'],
@@ -901,9 +1058,11 @@ def post_process_night(single_frame_csv, joint_interval_csv,
                                                )
     sf_cumulated = _single_frame_prediction_to_intervalprediction(single_frame_dist)
     
+    
     # read time interval file and apply rolling average
     joint_image_dist = _read_csv(joint_interval_csv)
     joint_image_dist = _mark_truncated_images_joint(joint_image_dist)
+    #print( [(j, round(joint_image_dist[j][4], 2)) for j in range(len(joint_image_dist)) if joint_image_dist[j][4] > 0] )
     joint_image_dist = _add_observation_time_mf(joint_image_dist)    
     joint_image_dist = _apply_rolling_average(joint_image_dist, 
                                               post_processing_rules['ROLLING_AVERAGE_JOINT_IMAGES'], 
@@ -931,19 +1090,35 @@ def post_process_night(single_frame_csv, joint_interval_csv,
         
     # apply post processing rules
     ensemble_sparse = _sparse_encoding(ensemble_dist)
+    
+    if individual_code in out_regulations.keys():
+        if datum in out_regulations[individual_code][0]:
+            out_dur = out_regulations[individual_code][1]
+            ensemble_sparse = _add_out_regulations_start(ensemble_sparse, out_dur)
+            
     ensemble_sparse = _extract_single_phases( ensemble_sparse )
-    ensemble_sparse = _remove_out(ensemble_sparse, logfile)
+    ensemble_sparse = _remove_truncated_images(ensemble_sparse)    
+    ensemble_sparse = _remove_out(ensemble_sparse, logfile)    
     ensemble_sparse = _map_behaviors(ensemble_sparse)
-    ensemble_sparse = _remove_truncated_images(ensemble_sparse)
-    ensemble_sparse = _remove_out(ensemble_sparse, logfile)
-    ensemble_sparse = _remove_short_phases(ensemble_sparse)
+    
+    
     
     x = True
+    c_count = 0
     while x:
-        ensemble_sparse, x = _remove_out_fluctuation(ensemble_sparse)
-    ensemble_sparse = _remove_short_phases(ensemble_sparse)
+        c_count += 1
+        if c_count > 200: # sanity check whether no more changes are done
+            ens_copy = copy.deepcopy(ensemble_sparse)
+            ensemble_sparse, x = _remove_out_fluctuation(ensemble_sparse)
+            if ens_copy == ensemble_sparse:
+                x = False
+        else:
+            ensemble_sparse, x = _remove_out_fluctuation(ensemble_sparse)   
     
+    ensemble_sparse = _remove_short_phases(ensemble_sparse)   
     ensemble_sparse = _time_shift(ensemble_sparse, length = post_processing_rules['ROLLING_AVERAGE_ENSEMBLE'] - 1)
+    
+
     
     phases_ordered = [ [x[0] for x in ensemble_sparse if x[1] == 0], 
                       [x[0] for x in ensemble_sparse if x[1] == 1],

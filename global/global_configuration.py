@@ -6,6 +6,7 @@ __copyright__ = "Copyright 2020, M. Hahn-Klimroth, T. Kapetanopoulos, J. Gübert
 __credits__ = ["J. Gübert", "P. Dierkes"]
 __license__ = "MIT"
 __version__ = "1.1"
+__maintainer__ = "M. Hahn-Klimroth"
 __status__ = "Development"
 
 
@@ -30,6 +31,7 @@ Contains all the needed configurations, i.e.
 """
 
 import numpy as np
+from post_processing_rules import INTERVAL_LENGTH, POST_PROCESSING_RULES, OUT_REGULATIONS
 
 
 """
@@ -47,166 +49,29 @@ COLOR_MAPPING = {'standing': 'cornflowerblue',
                  'truncated': 'grey'}
 
 
-INTERVAL_LENGTH = 7
 IMG_SIZE = (300, 300)
 BATCH_SIZE_BEHAVIOR = 8
 
 GLOBAL_STARTING_TIME = 17
 GLOBAL_ENDING_TIME = 7
-GLOBAL_OBSERVATION_HOURS = 14
+GLOBAL_OBSERVATION_HOURS = 14 
 GLOBAL_VIDEO_LENGTH = GLOBAL_OBSERVATION_HOURS*3600
 
 PACKAGE_SIZE_DENSITY_STATISTICS = 0.5 # hours
 
-"""
-Post-Processing
-"""
-POST_PROCESSING_RULES = {
-'no': {
-       'ROLLING_AVERAGE_SINGLE_FRAMES': 0,
-       'ROLLING_AVERAGE_JOINT_IMAGES': 0,
-       'ROLLING_AVERAGE_ENSEMBLE': 0,
-       'ROLLING_AVERAGE_WEIGHTS': np.array([1.0, 1.0, 1.0, 10**(-15), 1.0]),
-       'ROLLING_AVERAGE_POTENCY_SF': 1.0,
-       'ROLLING_AVERAGE_POTENCY_MF': 1.0,
-       'ROLLING_AVERAGE_POTENCY_ENSEMBLE': 1.0,
-       'WEIGHTS_NETWORKS': [0.5, 0.5],
-       
-        'MIN_LEN_SLS': 0,
-        'MIN_LEN_SLA': 0,
-        'MIN_LEN_ALS': 0,
-        'MIN_LEN_ALA': 0,
-        'MIN_LEN_OLA': 0,
-        'MIN_LEN_OLS': 0,
-        'MIN_LEN_ALO': 0,
-        'MIN_LEN_SLO': 0,
-        
-        'MIN_LEN_SAS': 0,
-        'MIN_LEN_SAL': 0,
-        'MIN_LEN_LAS': 0,
-        'MIN_LEN_LAL': 0,
-        'MIN_LEN_LAO': 0,
-        'MIN_LEN_OAL': 0,
-        'MIN_LEN_OAS': 0,
-        'MIN_LEN_SAO': 0,
-        
-        'MIN_LEN_ASA': 0,
-        'MIN_LEN_ASL': 0,
-        'MIN_LEN_LSA': 0,
-        'MIN_LEN_LSL': 0,
-        'MIN_LEN_LSO': 0,
-        'MIN_LEN_OSL': 0,
-        'MIN_LEN_ASO': 0,
-        'MIN_LEN_OSA': 0,
-        
-        'MIN_LEN_OUT': 0,
-        'MIN_TIME_OUT': 0,
-        
-        'MIN_LEN_TRUNCATION': 0, # shorter truncations will just count as the previous behavior.
-        'MIN_LEN_TRUNCATION_SWAP': 7200, # longer truncations will count as REAL_BEHAVIOR_LONG
-        'TRUNCATION_REAL_BEHAVIOR_LONG': 1, # 1:transfers those truncation of at least 70 seconds to lying, 4: stays truncated
-        'TRUNCATION_INTERMEDIATE': 3,
-        
-        'OUT_FLUCTUATION_REMOVAL_MAX': 3*9,
-        'OUT_FLUCTUATION_REMOVAL_MIN_BEHAV': 0.20 },
-        
-'Standard': {
-       'ROLLING_AVERAGE_SINGLE_FRAMES': 4*INTERVAL_LENGTH,
-       'ROLLING_AVERAGE_JOINT_IMAGES':4,
-       'ROLLING_AVERAGE_ENSEMBLE': 4,
-       'ROLLING_AVERAGE_WEIGHTS': np.array([1.0, 1.0, 1.0, 10**(-15), 1.0]),
-       'ROLLING_AVERAGE_POTENCY_SF': 1.0,
-       'ROLLING_AVERAGE_POTENCY_MF': 1.0,
-       'ROLLING_AVERAGE_POTENCY_ENSEMBLE': 1.0,
-       'WEIGHTS_NETWORKS': [0.5, 0.5],
-       
-        'MIN_LEN_SLS': 3,
-        'MIN_LEN_SLA': 3,
-        'MIN_LEN_ALS': 3,
-        'MIN_LEN_ALA': 6,
-        'MIN_LEN_OLA': 6,
-        'MIN_LEN_OLS': 6,
-        'MIN_LEN_ALO': 6,
-        'MIN_LEN_SLO': 6,
-        
-        'MIN_LEN_SAS': 25,
-        'MIN_LEN_SAL': 25,
-        'MIN_LEN_LAS': 25,
-        'MIN_LEN_LAL': 25,
-        'MIN_LEN_LAO': 25,
-        'MIN_LEN_OAL': 25,
-        'MIN_LEN_OAS': 25,
-        'MIN_LEN_SAO': 25,
-        
-        'MIN_LEN_ASA': 9,
-        'MIN_LEN_ASL': 6,
-        'MIN_LEN_LSA': 6,
-        'MIN_LEN_LSL': 2,
-        'MIN_LEN_LSO': 9,
-        'MIN_LEN_OSL': 9,
-        'MIN_LEN_ASO': 9,
-        'MIN_LEN_OSA': 9,
-        
-        'MIN_LEN_OUT': 9,
-        'MIN_TIME_OUT': 0,
-        
-        'MIN_LEN_TRUNCATION': 13, # shorter truncations will just count as the previous behavior.
-        'MIN_LEN_TRUNCATION_SWAP': 85, # longer truncations will count as REAL_BEHAVIOR_LONG
-        'TRUNCATION_REAL_BEHAVIOR_LONG': 1, # 1:transfers those truncation of at least 70 seconds to lying, 4: stays truncated
-        'TRUNCATION_INTERMEDIATE': 3,
-        
-        'OUT_FLUCTUATION_REMOVAL_MAX': 3*9,
-        'OUT_FLUCTUATION_REMOVAL_MIN_BEHAV': 0.20 },
 
-'Standard-binary': {
-       'ROLLING_AVERAGE_SINGLE_FRAMES': 5*INTERVAL_LENGTH,
-       'ROLLING_AVERAGE_JOINT_IMAGES':5,
-       'ROLLING_AVERAGE_ENSEMBLE': 5,
-       'ROLLING_AVERAGE_WEIGHTS': np.array([1.0, 1.0, 1.0, 10**(-15), 1.0]),
-       'ROLLING_AVERAGE_POTENCY_SF': 1.0,
-       'ROLLING_AVERAGE_POTENCY_MF': 1.0,
-       'ROLLING_AVERAGE_POTENCY_ENSEMBLE': 1.0,
-       'WEIGHTS_NETWORKS': [0.5, 0.5],
-        
-        'MIN_LEN_SLS': 0,
-        'MIN_LEN_SLA': 0,
-        'MIN_LEN_ALS': 0,
-        'MIN_LEN_ALA': 5*9,
-        'MIN_LEN_OLA': 5*9,
-        'MIN_LEN_OLS': 0,
-        'MIN_LEN_ALO': 5*9,
-        'MIN_LEN_SLO': 0,
-        
-        'MIN_LEN_SAS': 0,
-        'MIN_LEN_SAL': 0,
-        'MIN_LEN_LAS': 0,
-        'MIN_LEN_LAL': 5*9,
-        'MIN_LEN_LAO': 5*9,
-        'MIN_LEN_OAL': 5*9,
-        'MIN_LEN_OAS': 0,
-        'MIN_LEN_SAO': 0,
-        
-        'MIN_LEN_ASA': 0,
-        'MIN_LEN_ASL': 0,
-        'MIN_LEN_LSA': 0,
-        'MIN_LEN_LSL': 0,
-        'MIN_LEN_LSO': 0,
-        'MIN_LEN_OSL': 0,
-        'MIN_LEN_ASO': 0,
-        'MIN_LEN_OSA': 0,       
-      
-        
-        'MIN_LEN_OUT': 5*9,
-        'MIN_TIME_OUT': 0,
-        
-        'MIN_LEN_TRUNCATION': 43, # shorter truncations will just count as the previous behavior.
-        'MIN_LEN_TRUNCATION_SWAP': 85, # longer truncations will count as REAL_BEHAVIOR_LONG
-        'TRUNCATION_REAL_BEHAVIOR_LONG': 1, # 1:transfers those truncation of at least 70 seconds to lying, 4: stays truncated
-        'TRUNCATION_INTERMEDIATE': 3,
-        
-        'OUT_FLUCTUATION_REMOVAL_MAX': 15*9,
-        'OUT_FLUCTUATION_REMOVAL_MIN_BEHAV': 0.20},
 
+
+
+
+"""
+POST-PROCESSING
+"""
+
+PP_RULE_DICT = {
+    # species: [total, binary]
+    'Addax': ['Standard', 'Standard-binary'],
+    
 }
 
 
@@ -216,8 +81,13 @@ IMAGE CUTOUT
 """
 DETECTION_MIN_CONFIDENCE = 0.90
 
+# species
+# enclosure_code
+# enclosure (1) individual_code (2 und 3): species_zoo_1_2+3
 MIN_DETECTION_SCORE = {
-        }
+        'Addax': 0.2,
+
+}
 
 
 IOU_THRESHOLD = {
@@ -231,10 +101,11 @@ ANIMAL_NUMBER_SEPERATOR = ";"
 IMAGES_PER_INTERVAL = 4
 
 VIDEO_ORDER_PLACEMENT = {
-
+                
 }
 
 VIDEO_BLACK_REGIONS ={
+      
         }
 
 
@@ -242,59 +113,69 @@ VIDEO_BLACK_REGIONS ={
 """
 Detection Networks
 """
+STANDARD_OD = ''
 
 BASE_OD_NETWORK_GLOBAL = {
     # species
+    'Addax': STANDARD_OD,
         
     # species_zoo
     
     # species_zoo_enclosure
-
-    # species_zoo_enclosure_individuals e.g. 'Eland_ZooName_1_1+2'
+     
+      
+    # species_zoo_enclosure_individuals e.g. 'Eland_Place_1_1+2'
 }
 
+STANDARD_OD_LABEL = ''
 
 OD_NETWORK_LABELS_GLOBAL = {
- 
-    # species
-       
+    'Addax': STANDARD_OD_LABEL,
     # species_zoo
     
     # species_zoo_enclosure
+    
+    # 'Bergriedbock_Kronberg_1': 'zusammenstehende/2022-01-13_OD_Bergriedbock_Kronberg_1/classes.txt',
  
-    # species_zoo_enclosure_individuals e.g. 'Eland_ZooName_1_1+2'
-        
+    # species_zoo_enclosure_individuals e.g. 'Elen_Hannover_1_1+2'
+
     }
+
+
+
+"""
+******************************************************************************
+Action classification
+******************************************************************************
+"""
+# standard-variablen
 
 BEHAVIOR_NETWORK_JOINT_GLOBAL = {
     
-    # species_zoo
-    
-    # individualcode
+    'Addax': 'network_file.h5',
+ 
 
     }
 
 BEHAVIOR_NETWORK_SINGLE_FRAME_GLOBAL = {
-    # species_zoo
-    
-    # individualcode
-    }
-
+    'Addax': 'network_file.h5',
+  }
 
 BEHAVIOR_NETWORK_JOINT_GLOBAL_BINARY = {
-    # species_zoo
-    
-    # individualcode
+    'Addax': 'network_file.h5',
     }
 
 BEHAVIOR_NETWORK_SINGLE_FRAME_GLOBAL_BINARY = {
-    # species_zoo
-    
-    # individualcode
+ 'Addax': 'network_file.h5',
     }
 
 
 
+
+TRUNCATION_TOP_STANDARD = 0
+TRUNCATION_BOT_STANDARD = 2000
+TRUNCATION_LEFT_STANDARD = 0
+TRUNCATION_RIGHT_STANDARD = 2000
 
 def get_iou_thresh(enclosure_code_ind_code):
     
@@ -307,27 +188,37 @@ def get_iou_thresh(enclosure_code_ind_code):
 
 def get_detection_score(enclosure_code_ind_code):
     enclosure_code = enclosure_code_ind_code.split('_')[0] + '_' + enclosure_code_ind_code.split('_')[1] + '_' + enclosure_code_ind_code.split('_')[2]
+    species, _, _ = enclosure_code.split('_')
     
     if enclosure_code_ind_code in MIN_DETECTION_SCORE.keys():
         return MIN_DETECTION_SCORE[enclosure_code_ind_code]
+    
     if enclosure_code in MIN_DETECTION_SCORE.keys():
         return MIN_DETECTION_SCORE[enclosure_code]
+    
+    if species in MIN_DETECTION_SCORE.keys():
+        return MIN_DETECTION_SCORE[species]
+    
     return DETECTION_MIN_CONFIDENCE
 
 def get_behaviornetwork(individual_code, network_dict):
     
     if individual_code in network_dict.keys():
+        print("Used AC network: ", network_dict[individual_code])
         return network_dict[individual_code]
         
     species, zoo = individual_code.split("_")[0], individual_code.split("_")[1]
         
     if species + '_' + zoo in network_dict.keys():
+        print("Used AC network: ", network_dict[species + '_' + zoo])
         return network_dict[species + '_' + zoo]
         
-    if species.startswith('Zebra'): # TODO: Add missing networks from time to time
-        return network_dict['Basisnetzwerk_Zebra']
-        
-    return network_dict['Basisnetzwerk_Antilopen']
+    if species in network_dict.keys():
+        print("Used AC network: ", network_dict[species])
+        return network_dict[species]
+    
+    print("ERROR: No suitable AC network found in global_configuration!")
+    return ''
 
 def get_object_detection_network(enclosure_code, 
                     enclosure_individual_code,
@@ -356,3 +247,14 @@ def get_object_detection_network(enclosure_code,
     
         
     return net, label
+
+
+def get_postprocessing_rule(individual_code, mode, pp_set = PP_RULE_DICT):
+    species, zoo, indnum = individual_code.split('_')
+    if individual_code in pp_set.keys():
+        return pp_set[individual_code][mode] # mode = 0 -> total, 1 -> binary
+    if species in pp_set.keys():
+        return pp_set[species][mode]
+    
+    print('ERROR: No post-processing rule defined for ', individual_code)
+    return ''

@@ -33,7 +33,8 @@ def generate_raw_images(csv_input_file = configuration.INPUT_CSV_FILE,
                         images_per_interval = configuration.IMAGES_PER_INTERVAL, 
                         box_placement = configuration.VIDEO_ORDER_PLACEMENT, 
                         polygon_endpoints = configuration.VIDEO_BLACK_REGIONS, 
-                        base_data_path = configuration.BASE_PATH_DATA):
+                        base_data_path = configuration.BASE_PATH_DATA,
+                        csv_file_line = -1):
     """
     
 
@@ -66,9 +67,10 @@ def generate_raw_images(csv_input_file = configuration.INPUT_CSV_FILE,
 
     """
 
-    video_list_merged_by_enclosure = _create_videolist_for_prediction(overview_file = csv_input_file, 
+    video_list_merged_by_enclosure = _create_videolist_for_prediction(overview_file = csv_input_file,                                                                       
                                                                       delim = csv_delimiter, 
-                                                                      animal_sep = animal_num_sep)
+                                                                      animal_sep = animal_num_sep,
+                                                                      csv_file_line = csv_file_line)
     
     for enclosure_vid_code in video_list_merged_by_enclosure:
         print("Enclosure-Video-Code: "+enclosure_vid_code)   
@@ -307,7 +309,7 @@ def _create_pictures_from_videos(videolist, enclosure_vid_code, cut_off, interva
 
 
 
-def _create_videolist_for_prediction(overview_file, delim, animal_sep, 
+def _create_videolist_for_prediction(overview_file, delim, animal_sep, csv_file_line,
                                      vid_order = configuration.VIDEO_ORDER_PLACEMENT):
     """
     Returns a dictionary {Art_Zoo_Enclosure_Num*vidnum+vidnum2: [video_list_per_day] }
@@ -340,10 +342,15 @@ def _create_videolist_for_prediction(overview_file, delim, animal_sep,
         line_count = 0
         for row in csv_reader:
             if line_count == 0:
-                if len(row) != 14:
+                if not len(row) >= 12:
                     print("Overview file has the wrong format.")
                     return return_dict
             else:
+
+                if csv_file_line != -1 and csv_file_line != line_count:
+                    line_count += 1
+                    continue
+                
                 date = row[0]
                 species = row[1]
                 zoo = row[2]

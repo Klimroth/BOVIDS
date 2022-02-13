@@ -53,9 +53,10 @@ def _cut_out_prediction_data(images_to_predict,
                              od_model,  
                              enclosure_code, 
                              output_folder, 
-                             label_names, 
+                             label_names,                              
                              img_size=cf.IMG_SIZE,
-                             min_detection_score = 0.9):
+                             min_detection_score = 0.9,
+                             iou_threshold = 0.5):
     
     def _individual_name_from_boxcode(individual_codes, yolo_label):
         if len(individual_codes) == 1:
@@ -65,26 +66,96 @@ def _cut_out_prediction_data(images_to_predict,
             yolo_label = yolo_label.replace("Elenantilope", "Elen")
         return yolo_label
     
-    def _post_process_boxes(past_detections, curr_detection):
-        # TODO: implement prediction history, for instance, tracking
+    
+    def calc_iou(boxA, boxB):
+        # boxA = [x0, y0, x1, y1]
+    	# determine the (x, y)-coordinates of the intersection rectangle
+    	xA = max(boxA[0], boxB[0])
+    	yA = max(boxA[1], boxB[1])
+    	xB = min(boxA[2], boxB[2])
+    	yB = min(boxA[3], boxB[3])
+    	# compute the area of intersection rectangle
+    	interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+    	# compute the area of both the prediction and ground-truth
+    	# rectangles
+    	boxAArea = (boxA[2] - boxA[0] + 1) * (boxA[3] - boxA[1] + 1)
+    	boxBArea = (boxB[2] - boxB[0] + 1) * (boxB[3] - boxB[1] + 1)
+    	# compute the intersection over union by taking the intersection
+    	# area and dividing it by the sum of prediction + ground-truth
+    	# areas - the interesection area
+    	iou = interArea / float(boxAArea + boxBArea - interArea)
+    	# return the intersection over union value
+    	return iou
+    
+    def _post_process_boxes(curr_detection, label_names, iou_threshold = iou_threshold):
+                
+        if len(curr_detection) == 1:
+            return curr_detection
         
-        if len(curr_detection) > 1:
+        if len(curr_detection) == 2:
             label_box_list = sorted(curr_detection, key=itemgetter(5), reverse = True)
             if label_box_list[0][0] == label_box_list[1][0]: # both animals have the same label
                 poss_names = [name for name in label_names]
                 poss_names.remove(label_box_list[0][0])
                 label_box_list[1][0] = poss_names[0]
                 
-                
-            return label_box_list[0:2]
+            
+            box1 = label_box_list[0][1:5]
+            box2 = label_box_list[1][1:5]
+            
+            iou = calc_iou(box1, box2)
+            
+            if iou < iou_threshold:            
+                return label_box_list[0:2]
+            else:
+                return label_box_list[0:1]
         
-        return curr_detection
+        if len(curr_detection) >= 3:
+            
+            poss_names = [name for name in label_names]
+            num_labels = len(poss_names)
+            label_box_list = sorted(curr_detection, key=itemgetter(5), reverse = True)
+            label_box_list = label_box_list[:min(num_labels, len(label_box_list))]
+            len_boxes = len(label_box_list)
+            for j in range(num_labels):
+                if j >= len_boxes:
+                    continue
+                if label_box_list[j][0] in poss_names:
+                    poss_names.remove(label_box_list[j][0])
+            
+            taken_names = []
+            for j in range(num_labels):
+                if j >= len_boxes:
+                    continue
+                if label_box_list[j][0] in taken_names:
+                    new_label = poss_names[0]
+                    label_box_list[j][0] = new_label
+                    poss_names.remove(new_label)
+                taken_names.append(label_box_list[j][0])
+   
+
+            dismissed = []
+            for i in range(len_boxes):
+                if i in dismissed:
+                    continue
+                for j in range(i+1, len_boxes):
+                    if j in dismissed:
+                        continue
+                    box1 = label_box_list[i][1:5]
+                    box2 = label_box_list[j][1:5]
+            
+                    iou = calc_iou(box1, box2)
+                    if iou >= iou_threshold:
+                        dismissed.append(j)
+            ret_list = [label_box_list[i] for i in range(len_boxes) if i not in dismissed]
+            return ret_list
+    
     
     
     i = 1
     
     previous_detections = []
-    for img_path in images_to_predict:    
+    for img_path in sorted(images_to_predict):    
         
         i+= 1
 
@@ -115,27 +186,21 @@ def _cut_out_prediction_data(images_to_predict,
         
         if len(label_box_list) > 0:
             
-            if len(label_names) > 2:
-                print("ERROR: Not implemented right now (3 or more classes).")
-                return
-            
-            if len(label_names) == 2:
+
+            if len(label_names) >= 2:
                 # exactly two individuals                
-                label_box_list_postprcessed = _post_process_boxes(past_detections = previous_detections, 
-                                                                  curr_detection = label_box_list)
+                label_box_list_postprcessed = _post_process_boxes(curr_detection = label_box_list,
+                                                                  label_names=label_names)
                 
             if len(label_names) == 1:
                 label_box_list_postprcessed = [sorted(label_box_list, key=itemgetter(5), reverse = True)[0]]
             
-            
-                
             
             for label, x1, y1, x2, y2, score in label_box_list_postprcessed:
                 box_part = img[y1:y2, x1:x2]
                 box_part_rs = cv2.resize(box_part, img_size, interpolation=cv2.INTER_AREA)
                 
                 ind_name = _individual_name_from_boxcode(individual_codes = label_names, yolo_label=label)
-                
                 save_path = output_folder + ind_name + '/' + interval_num + '/'
                 ensure_dir(save_path)
                 cv2.imwrite(save_path + img_name, box_part_rs)
@@ -155,7 +220,7 @@ def _cut_out_prediction_data(images_to_predict,
     
     
 
-def _predict_one_night(input_path_night, od_model, od_labels, enclosure_code, output_folder, min_conf):    
+def _predict_one_night(input_path_night, od_model, od_labels, enclosure_code, output_folder, min_conf, iou_thresh):    
     
    
     image_path_to_predict = []
@@ -167,7 +232,7 @@ def _predict_one_night(input_path_night, od_model, od_labels, enclosure_code, ou
    
    
     print('Night contains %d images.' % len(image_path_to_predict))
-    _cut_out_prediction_data(image_path_to_predict, od_model, enclosure_code, output_folder, od_labels, min_detection_score=min_conf)
+    _cut_out_prediction_data(image_path_to_predict, od_model, enclosure_code, output_folder, od_labels, min_detection_score=min_conf, iou_threshold=iou_thresh)
 
 
  
@@ -289,7 +354,8 @@ def merge_timeinterval_images(datum, path_to_intervalfolders, output_folder_base
 
 
 
-def predict_multiple_nights(enclosure_info, individual_info, 
+def predict_multiple_nights(enclosure_info, individual_info, required_enclosure = -1,
+                            required_date = -1, 
                             input_path = cf.TMP_STORAGE_IMAGES, 
                             output_folder_base = cf.TMP_STORAGE_CUTOUT):
     """
@@ -326,6 +392,12 @@ def predict_multiple_nights(enclosure_info, individual_info,
         for date in enclosure_info[enclosure_code]['dates']:
             index += 1
             
+            # if only a specific line should be predicted
+            if required_enclosure != -1:
+                if not (enclosure_code == required_enclosure and date == required_date):
+                    continue
+                
+                
             individual_codes = enclosure_info[enclosure_code]['individuals'][index]
             enclosure_individual_code_string = enclosure_code + '_' + '+'.join([x.split("_")[2] for x in individual_codes])
         
@@ -358,8 +430,7 @@ def predict_multiple_nights(enclosure_info, individual_info,
                 modelpaths[enclosure_individual_code_string] = []
                         
             modelpaths[enclosure_individual_code_string].append([date, od_label_file, od_classes, net_path])
-            
-            
+        
 
         for enclosure_individual_code_string in modelpaths:
             od_label_file, od_classes, net_path = modelpaths[enclosure_individual_code_string][0][1], modelpaths[enclosure_individual_code_string][0][2], modelpaths[enclosure_individual_code_string][0][3]
@@ -385,11 +456,12 @@ def predict_multiple_nights(enclosure_info, individual_info,
                                    od_classes, 
                                    enclosure_code, 
                                    output_folder_base + 'intervals/' + enclosure_code + '/' + datum +'/', 
-                                   YOLO_CONFIG['score_threshold'])
+                                   YOLO_CONFIG['score_threshold'],
+                                   YOLO_CONFIG['iou_threshold'])
         
                 merge_timeinterval_images(datum = datum,
                                           path_to_intervalfolders = output_folder_base + 'intervals/' + enclosure_code + '/', 
                                           output_folder_base = output_folder_base)
 
-        shutil.rmtree(output_folder_base + 'intervals/' + enclosure_code, ignore_errors = True)
+                shutil.rmtree(output_folder_base + 'intervals/' + enclosure_code + '/' + datum +'/', ignore_errors = True)
     

@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Created on Sun Nov 15 17:24:45 2020
 
-__author__ = "Max Hahn-Klimroth"
-__copyright__ = "Copyright 2021, M. Hahn-Klimroth, J. Gübert, P. Dierkes"
-__credits__ = ["J. Gübert", "P. Dierkes"]
-__license__ = "GPL-3.0"
-__version__ = "1.0"
-__status__ = "Development"
+@author: z42
+"""
 
 import os
 from collections import Counter
