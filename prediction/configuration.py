@@ -38,8 +38,12 @@ Saving paths
 INPUT_CSV_FILE = '' 
 
 # on local hard drive
+# wenn OD noch nicht angestellt
 TMP_STORAGE_IMAGES = ''
-TMP_STORAGE_CUTOUT = '' 
+TMP_STORAGE_CUTOUT = ''
+
+# wenn OD bereits gelaufen ist
+#TMP_STORAGE_CUTOUT = '/home/omen7/60-PromotionJenny/KI_CutOutImages/'
 
 # on server
 FINAL_STORAGE_CUTOUT = ''
@@ -47,23 +51,26 @@ FINAL_STORAGE_PREDICTION_FILES = ''
 
 LOGGING_FILES = ''
 
-
+"""
+Mode
+"""
+PER_NIGHT = True
 
 """
 Conducted Steps (False = step will be conducted)
 """
-SKIP_IMAGE_CREATION = False
+SKIP_IMAGE_CREATION = True
                              
-SKIP_INDIVIDUAL_DETECTION = False
+SKIP_INDIVIDUAL_DETECTION = True
 
-SKIP_BEHAVIOR_TOTAL_SF = False
-SKIP_BEHAVIOR_TOTAL_MF = False
+SKIP_BEHAVIOR_TOTAL_SF = True
+SKIP_BEHAVIOR_TOTAL_MF = True
 
-SKIP_BEHAVIOR_BINARY_SF = False
-SKIP_BEHAVIOR_BINARY_MF = False  
+SKIP_BEHAVIOR_BINARY_SF = True
+SKIP_BEHAVIOR_BINARY_MF = True
                              
-SKIP_MOVING_FILES = False
-SKIP_REMOVING_TEMPORARY_FILES = False
+SKIP_MOVING_FILES = True
+SKIP_REMOVING_TEMPORARY_FILES = True
                              
 SKIP_PP_TOTAL = False
 SKIP_PP_BINARY = False
