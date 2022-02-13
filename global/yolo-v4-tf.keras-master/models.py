@@ -7,7 +7,7 @@ from glob import glob
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.keras import layers, models, optimizers
-
+from adabound_opt import AdaBoundOptimizer
 
 from custom_layers import yolov4_neck, yolov4_head, nms
 from utils import load_weights, get_detection_data, draw_bbox, voc_ap, draw_plot_func, read_txt_to_list
@@ -84,7 +84,15 @@ class Yolov4(object):
         
         
 
-        self.training_model.compile(optimizer=optimizers.Adam(lr=1e-5, clipnorm=0.001),
+        #self.training_model.compile(optimizer=optimizers.Adam(lr=1e-5, clipnorm=0.001),
+        #                            loss={'yolo_loss': lambda y_true, y_pred: y_pred})
+        #self.training_model.compile(optimizer=optimizers.Adam(lr=1e-4, clipnorm=0.0005),
+        #                            loss={'yolo_loss': lambda y_true, y_pred: y_pred})
+        #self.training_model.compile(optimizer=optimizers.Nadam(lr=1e-3),
+        #                            loss={'yolo_loss': lambda y_true, y_pred: y_pred})
+        #self.training_model.compile(optimizer=optimizers.Adam(amsgrad=False, lr=1e-3, epsilon=1e-6),
+        #                            loss={'yolo_loss': lambda y_true, y_pred: y_pred})
+        self.training_model.compile(optimizer=optimizers.Adam(amsgrad=True, lr=1e-4),
                                     loss={'yolo_loss': lambda y_true, y_pred: y_pred})
 
     def load_model(self, path):
