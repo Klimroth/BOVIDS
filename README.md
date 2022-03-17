@@ -1,9 +1,6 @@
 # BOVIDS
 BOVIDS is an end-to-end deep learning based tool for posture estimation of ungulates in videos. It is the software presented and discussed in
->  t.b.a.
->  
->  t.b.a.
->  
+> Gübert, J., Hahn-Klimroth, M., & Dierkes, P. W. (2022). BOVIDS: A deep learning-based software package for pose estimation to evaluate nightly behavior and > its application to common elands (Tragelaphus oryx) in zoos. Ecology and Evolution, 12, e8701. https://doi.org/10.1002/ece3.8701 
 Inside this contribution we explain the structure of BOVIDS and we highly recommend to read the methods section prior to the short instructions presented here as we assume that a potential user knows how the parts of BOVIDS interact with each other.
 
 ## License and citation
@@ -12,10 +9,8 @@ Re-use, distribution and modification as well as extending contributions under t
 If you use BOVIDS or parts of it, please consider citing the following publications:
 
 BOVIDS software package and an application:
->  t.b.a.
->  
->  t.b.a.
->  
+> Gübert, J., Hahn-Klimroth, M., & Dierkes, P. W. (2022). BOVIDS: A deep learning-based software package for pose estimation to evaluate nightly behavior and > its application to common elands (Tragelaphus oryx) in zoos. Ecology and Evolution, 12, e8701. https://doi.org/10.1002/ece3.8701 
+
 Technical analysis of the deep learning prediction pipeline:
 >  Hahn‐Klimroth, M, Kapetanopoulos, T, Gübert, J, Dierkes, PW. Deep learning‐based pose estimation for African ungulates in zoos. 
 >  Ecol Evol. 2021; 11: 6015– 6032. https://doi.org/10.1002/ece3.7367
